@@ -1,0 +1,7 @@
+[package]
+name = "voxelengine"
+version = "0.1.0"
+authors = ["Brandon Atkinson <bj.atkinson92@gmail.com>"]
+edition = "2018"
+
+[dependencies]
