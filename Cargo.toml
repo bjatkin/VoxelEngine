@@ -17,6 +17,8 @@ features = [
   'console',
   'Document',
   'Element',
+  'HtmlElement',
+  'Node',
   'HtmlCanvasElement',
   'WebGlBuffer',
   'WebGlRenderingContext',

@@ -1,9 +1,11 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader, WebGlUniformLocation, WebGlBuffer, console};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[wasm_bindgen(start)]
-pub fn start() -> Result<(), JsValue> {
+pub fn run() -> Result<(), JsValue> {
     let document = web_sys::window().unwrap().document().unwrap();
     let canvas = document.get_element_by_id("canvas").unwrap();
     let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
@@ -78,24 +80,28 @@ pub fn start() -> Result<(), JsValue> {
     let u_transform_location = context.get_uniform_location(&program, "u_Transform");
     let a_vertex_location    = context.get_attrib_location(&program,  "a_Vertex");
 
-    render(&context, &[
-        0.9968330,  0.0794111,  0.0042227, 0.0,
-        -0.0794111,  0.9912028,  0.1058814, 0.0,
-        0.0042227, -0.1058814,  0.9943698, 0.0,
-        0.0, 0.0, 0.0, 1.0,
+    //Prep the closure for request animiation frame
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
 
-        // 2.0, 0.0, 0.0, 0.0,
-        // 0.0, 2.0, 0.0, 0.0,
-        // 0.0, 0.0, 2.0, 0.0,
-        // 0.0, 0.0, 0.0, 1.0,
-    ], 
-    u_transform_location.as_ref(),
-    u_color_location.as_ref(),
-    a_vertex_location, 
-    Some(&buffer),
-    4,
-    );
+    *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+        render(&context, &[
+            0.9968330,  0.0794111,  0.0042227, 0.0,
+            -0.0794111,  0.9912028,  0.1058814, 0.0,
+            0.0042227, -0.1058814,  0.9943698, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        ], 
+        u_transform_location.as_ref(),
+        u_color_location.as_ref(),
+        a_vertex_location, 
+        Some(&buffer),
+        4,
+        );
 
+        request_animation_frame(f.borrow().as_ref().unwrap());
+    }) as Box<dyn FnMut()>));
+
+    request_animation_frame(g.borrow().as_ref().unwrap());
     Ok(())
 }
 
@@ -122,7 +128,6 @@ pub fn render(
         0,
         triangles * 3
     );
-    console::log_1(&a_vertex_location.into());
 
     context.uniform4fv_with_f32_array(u_color_location, &[0.0, 0.0, 0.0, 1.0]);
     for start in 0..triangles {
@@ -132,6 +137,16 @@ pub fn render(
             3
         );
     }
+}
+
+fn window() -> web_sys::Window {
+    web_sys::window().expect("no global `window` exists")
+}
+
+fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+    window()
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .expect("should register `requestAnimationFrame` OK");
 }
 
 pub fn compile_shader(
