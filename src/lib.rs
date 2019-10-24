@@ -84,12 +84,19 @@ pub fn run() -> Result<(), JsValue> {
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
+    let mut theta: f32 = 0.0;
+    let step: f32 = std::f32::consts::PI/48.0;
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+        theta += step;
+        if theta >= 2.0*std::f32::consts::PI {
+            theta = 0.0;
+        }
+
         render(&context, &[
-            0.9968330,  0.0794111,  0.0042227, 0.0,
-            -0.0794111,  0.9912028,  0.1058814, 0.0,
-            0.0042227, -0.1058814,  0.9943698, 0.0,
-            0.0, 0.0, 0.0, 1.0,
+            theta.cos(),  0.0, theta.sin(), 0.0,
+            0.0,          1.0, 0.0,         0.0,
+            -theta.cos(), 0.0, theta.cos(), 0.0,
+            0.0,          0.0, 0.0,         1.0,
         ], 
         u_transform_location.as_ref(),
         u_color_location.as_ref(),
