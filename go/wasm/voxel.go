@@ -1,12 +1,16 @@
 package main
 
+import (
+	"github.com/go-gl/mathgl/mgl32"
+)
+
 type Voxel struct {
 	x, y, z float32
-	color   [6][3]float32
+	color   [6]RGB
 	data    [216]float32
 }
 
-func newVoxel(x, y, z float32, col [6][3]float32) *Voxel {
+func newVoxel(x, y, z float32, col [6]RGB) *Voxel {
 	ret := Voxel{
 		x:     x,
 		y:     y,
@@ -21,7 +25,11 @@ func newVoxel(x, y, z float32, col [6][3]float32) *Voxel {
 func (v *Voxel) buildData() {
 	x, y, z := v.x, v.y, v.z
 	a, b, c := x+1.0, y+1.0, z-1.0
-	col := v.color
+	var col [6]mgl32.Vec3
+	for i, c := range v.color {
+		col[i] = c.vec3()
+	}
+
 	r1, g1, b1 := col[0][0], col[0][1], col[0][2]
 	r2, g2, b2 := col[1][0], col[1][1], col[1][2]
 	r3, g3, b3 := col[2][0], col[2][1], col[2][2]
