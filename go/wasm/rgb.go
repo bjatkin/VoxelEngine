@@ -16,6 +16,17 @@ func newRGB(r, g, b float32) RGB {
 	}
 }
 
+func newRGBSet(r, g, b float32) [6]RGB {
+	return [6]RGB{
+		newRGB(r, g, b),
+		newRGB(r, g, b),
+		newRGB(r, g, b),
+		newRGB(r, g, b),
+		newRGB(r, g, b),
+		newRGB(r, g, b),
+	}
+}
+
 func (rgb *RGB) vec3() mgl32.Vec3 {
 	return mgl32.Vec3{
 		rgb.r / 255.0,

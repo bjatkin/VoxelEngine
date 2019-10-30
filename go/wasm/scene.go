@@ -11,54 +11,86 @@ type Scene struct {
 	voxels        []*Voxel
 	gl            js.Value //Rendering context
 	program       js.Value //shader program
-	update        bool
+	width, height int      //width and height of the canvas
 	bufferData    []float32
 	buffLen       int
-	projMat       js.TypedArray
-	uProjMat      js.Value
-	viewMat       js.TypedArray
-	uViewMat      js.Value
-	modelMat      js.TypedArray
-	uModelMat     js.Value
-	aColor        js.Value
-	aPosition     js.Value
-	width, height int
+
+	projMat   js.TypedArray //Uniforms
+	uProjMat  js.Value
+	viewMat   js.TypedArray
+	uViewMat  js.Value
+	modelMat  js.TypedArray
+	uModelMat js.Value
+
+	aColor    js.Value //attributes
+	aPosition js.Value
+	aNormal   js.Value
+
+	update bool //does the data need to be updated?
 }
 
 const vShaderCode = `
-attribute vec3 position;
-uniform mat4 Pmatrix;
-uniform mat4 Vmatrix;
-uniform mat4 Mmatrix;
-attribute vec3 color;
-varying vec3 vColor;
+uniform mat4 u_Pmatrix;
+uniform mat4 u_Vmatrix;
+uniform mat4 u_Mmatrix;
+
+attribute vec3 a_Color;
+attribute vec3 a_Position;
+attribute vec3 a_Normal;
+
+varying vec3 v_Color;
+varying vec3 v_Normal;
+
 void main(void) {
-	gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(position, 1.);
-	vColor = color;
+	gl_Position = u_Pmatrix*u_Vmatrix*u_Mmatrix*vec4(a_Position, 1.0);
+	v_Normal = vec3( u_Pmatrix*u_Vmatrix*u_Mmatrix*vec4(a_Normal, 0.0));
+	v_Color = a_Color;
 }
 `
 const fShaderCode = `
 precision mediump float;
-varying vec3 vColor;
+
+varying vec3 v_Color;
+varying vec3 v_Normal;
+
 void main(void) {
-	gl_FragColor = vec4(vColor, 1.);
+	
+	vec3 to_light;
+	float cos_angle;
+	float ambient_light;
+
+	//normalized 1, 1, 1
+	to_light = vec3(0.57735026919, 0.57735026919, 0.57735026919);
+
+	//amount of ambient light in the scene
+	ambient_light = 0.5;
+
+	//for difuse light calculation
+	cos_angle = dot(v_Normal, to_light);
+	cos_angle = clamp(cos_angle, 0.0, 1.0);
+
+	gl_FragColor = vec4(v_Color*ambient_light + (v_Color*cos_angle) * (1.0-ambient_light), 1.0);
 }
 `
 
-func newScene(canvasId string, color RGB) *Scene {
+func newScene(canvasID string, color RGB) *Scene {
 	ret := Scene{}
-	ret.gl, ret.width, ret.height = getCanvas(canvasId)
+	ret.gl, ret.width, ret.height = getCanvas(canvasID)
 
 	vert := complieShader(ret.gl, glTypes.VertexShader, vShaderCode)
 	frag := complieShader(ret.gl, glTypes.FragmentShader, fShaderCode)
 
 	ret.program = linkProgram(ret.gl, vert, frag)
-	ret.uProjMat = ret.gl.Call("getUniformLocation", ret.program, "Pmatrix")
-	ret.uViewMat = ret.gl.Call("getUniformLocation", ret.program, "Vmatrix")
-	ret.uModelMat = ret.gl.Call("getUniformLocation", ret.program, "Mmatrix")
+	ret.uProjMat = ret.gl.Call("getUniformLocation", ret.program, "u_Pmatrix")
+	ret.uViewMat = ret.gl.Call("getUniformLocation", ret.program, "u_Vmatrix")
+	ret.uModelMat = ret.gl.Call("getUniformLocation", ret.program, "u_Mmatrix")
 
-	ret.aColor = ret.gl.Call("getAttribLocation", ret.program, "color")
-	ret.aPosition = ret.gl.Call("getAttribLocation", ret.program, "position")
+	ret.aPosition = ret.gl.Call("getAttribLocation", ret.program, "a_Position")
+	ret.gl.Call("enableVertexAttribArray", ret.aPosition)
+	ret.aColor = ret.gl.Call("getAttribLocation", ret.program, "a_Color")
+	ret.gl.Call("enableVertexAttribArray", ret.aColor)
+	ret.aNormal = ret.gl.Call("getAttribLocation", ret.program, "a_Normal")
+	ret.gl.Call("enableVertexAttribArray", ret.aNormal)
 
 	ret.setProjMat(45)
 	ret.setViewMat(mgl32.Vec3{3.0, 3.0, 3.0}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
@@ -88,20 +120,24 @@ func (s *Scene) buildBufferData() {
 			s.buffLen++
 		}
 	}
+
 	// Create a data buffer
 	tArray := js.TypedArrayOf(s.bufferData)
 	dataBuff := s.gl.Call("createBuffer")
 
 	// Bind the data into the buffer
-	floatBytes := 4
+	float32Bytes := 4
+	posSize := 3
+	colSize := 3
+	normSize := 3
+	vertexByteSize := posSize*float32Bytes + colSize*float32Bytes + normSize*float32Bytes
+	s.buffLen /= posSize + colSize + normSize
+
 	s.gl.Call("bindBuffer", glTypes.ArrayBuffer, dataBuff)
 	s.gl.Call("bufferData", glTypes.ArrayBuffer, tArray, glTypes.StaticDraw)
-
-	s.gl.Call("vertexAttribPointer", s.aPosition, 3, glTypes.Float, false, floatBytes*6, 0)
-	s.gl.Call("enableVertexAttribArray", s.aPosition)
-
-	s.gl.Call("vertexAttribPointer", s.aColor, 3, glTypes.Float, false, floatBytes*6, floatBytes*3)
-	s.gl.Call("enableVertexAttribArray", s.aColor)
+	s.gl.Call("vertexAttribPointer", s.aPosition, posSize, glTypes.Float, false, vertexByteSize, 0)
+	s.gl.Call("vertexAttribPointer", s.aColor, colSize, glTypes.Float, false, vertexByteSize, posSize*float32Bytes)
+	s.gl.Call("vertexAttribPointer", s.aNormal, colSize, glTypes.Float, false, vertexByteSize, posSize*float32Bytes+colSize*float32Bytes)
 }
 
 func (s *Scene) addVoxel(v *Voxel) {
@@ -135,11 +171,15 @@ func (s *Scene) setModelMat(rotX, rotY, rotZ float32) {
 
 	var modelMatrixBuffer *[16]float32
 	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
+
+	//TODO this call is leaking memory, find out why/ how to stop it!
 	s.modelMat = js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 }
 
-func (s *Scene) render(tdiff float64) {
-	s.buildBufferData() //build all the data and attach the interleved buffered data
+func (s *Scene) render() {
+	//build all the data and attach the interleved buffered data
+	s.buildBufferData()
+
 	// Bind all the uniforms for this draw call
 	s.gl.Call("uniformMatrix4fv", s.uProjMat, false, s.projMat)
 	s.gl.Call("uniformMatrix4fv", s.uViewMat, false, s.viewMat)

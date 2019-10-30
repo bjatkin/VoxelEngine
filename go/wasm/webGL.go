@@ -19,10 +19,6 @@ func linkProgram(gl, vertShader, fragShader js.Value) js.Value {
 	return program
 }
 
-func updateBuffer() {
-
-}
-
 func getCanvas(id string) (js.Value, int, int) {
 	// Init Canvas
 	doc := js.Global().Get("document")
@@ -52,7 +48,6 @@ type WebGl struct {
 	scenes []*Scene
 }
 
-var tmark float64
 var globalConetxt WebGl
 
 func newWebGL(scenes ...*Scene) WebGl {
@@ -63,21 +58,4 @@ func newWebGL(scenes ...*Scene) WebGl {
 
 func (w *WebGl) addScene(scene *Scene) {
 	w.scenes = append(w.scenes, scene)
-}
-
-func start(context WebGl) {
-	globalConetxt = context
-	//Kick the process off
-	js.Global().Call("requestAnimationFrame", js.Global().Get("renderFrame"))
-}
-
-//go:export renderFrame
-func renderFrame(now float64) {
-	tdiff := now - tmark
-	tmark = now
-
-	for _, s := range globalConetxt.scenes {
-		s.render(tdiff)
-	}
-	js.Global().Call("requestAnimationFrame", js.Global().Get("renderFrame"))
 }
