@@ -63,7 +63,7 @@ void main(void) {
 	to_light = vec3(0.57735026919, 0.57735026919, 0.57735026919);
 
 	//amount of ambient light in the scene
-	ambient_light = 0.5;
+	ambient_light = 0.3;
 
 	//for difuse light calculation
 	cos_angle = dot(v_Normal, to_light);
@@ -73,9 +73,9 @@ void main(void) {
 }
 `
 
-func newScene(canvasID string, color RGB) *Scene {
+func newScene(canvas js.Value, color RGB) *Scene {
 	ret := Scene{}
-	ret.gl, ret.width, ret.height = getCanvas(canvasID)
+	ret.gl, ret.width, ret.height = getContext(canvas)
 
 	vert := complieShader(ret.gl, glTypes.VertexShader, vShaderCode)
 	frag := complieShader(ret.gl, glTypes.FragmentShader, fShaderCode)
@@ -102,6 +102,8 @@ func newScene(canvasID string, color RGB) *Scene {
 	ret.gl.Call("clearDepth", 1.0)                                     // Z value that is set to the Depth buffer every frame
 	ret.gl.Call("viewport", 0, 0, ret.width, ret.height)               // Viewport size
 	ret.gl.Call("depthFunc", glTypes.LEqual)
+	ret.gl.Call("enable", 2884) //gl.CULL_FACE
+	ret.gl.Call("enable", glTypes.DepthTest)
 
 	return &ret
 }
@@ -140,8 +142,10 @@ func (s *Scene) buildBufferData() {
 	s.gl.Call("vertexAttribPointer", s.aNormal, colSize, glTypes.Float, false, vertexByteSize, posSize*float32Bytes+colSize*float32Bytes)
 }
 
-func (s *Scene) addVoxel(v *Voxel) {
-	s.voxels = append(s.voxels, v)
+func (s *Scene) addVoxel(voxels ...*Voxel) {
+	for _, v := range voxels {
+		s.voxels = append(s.voxels, v)
+	}
 	s.update = true
 }
 
@@ -186,7 +190,6 @@ func (s *Scene) render() {
 	s.gl.Call("uniformMatrix4fv", s.uModelMat, false, s.modelMat)
 
 	// Clear the screen
-	s.gl.Call("enable", glTypes.DepthTest)
 	s.gl.Call("clear", glTypes.ColorBufferBit)
 	s.gl.Call("clear", glTypes.DepthBufferBit)
 

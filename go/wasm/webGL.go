@@ -19,19 +19,17 @@ func linkProgram(gl, vertShader, fragShader js.Value) js.Value {
 	return program
 }
 
-func getCanvas(id string) (js.Value, int, int) {
+func getContext(canvas js.Value) (js.Value, int, int) {
 	// Init Canvas
-	doc := js.Global().Get("document")
-	canvasEl := doc.Call("getElementById", id)
-	width := canvasEl.Get("clientWidth").Int()
-	height := canvasEl.Get("clientHeight").Int()
-	canvasEl.Call("setAttribute", "width", width)
-	canvasEl.Call("setAttribute", "height", height)
-	canvasEl.Set("tabIndex", 0) // Not sure if this is needed
+	width := canvas.Get("clientWidth").Int()
+	height := canvas.Get("clientHeight").Int()
+	canvas.Call("setAttribute", "width", width)
+	canvas.Call("setAttribute", "height", height)
+	canvas.Set("tabIndex", 0) // Not sure if this is needed
 
-	gl := canvasEl.Call("getContext", "webgl")
+	gl := canvas.Call("getContext", "webgl")
 	if gl == js.Undefined() {
-		gl = canvasEl.Call("getContext", "experimental-webgl")
+		gl = canvas.Call("getContext", "experimental-webgl")
 	}
 	// once again
 	if gl == js.Undefined() {
