@@ -26,7 +26,10 @@ type Scene struct {
 	aPosition js.Value
 	aNormal   js.Value
 
-	update bool //does the data need to be updated?
+	cameraLoc mgl32.Vec3
+	cameraRot mgl32.Vec3
+
+	update bool //does the data buffer need to be updated?
 }
 
 const vShaderCode = `
@@ -93,8 +96,9 @@ func newScene(canvas js.Value, color RGB) *Scene {
 	ret.gl.Call("enableVertexAttribArray", ret.aNormal)
 
 	ret.setProjMat(45)
-	ret.setViewMat(mgl32.Vec3{3.0, 3.0, 3.0}, mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 1.0, 0.0})
-	ret.setModelMat(0, 0, 0)
+	ret.setViewMat(mgl32.Vec3{0.0, 0.0, 0.0}, mgl32.Vec3{0.0, 0.0, -1.0}, mgl32.Vec3{0.0, 1.0, 0.0})
+	ret.setModelMat(0, 0, 0, 0, 0, 0)
+	ret.cameraLoc = mgl32.Vec3{0.0, 0.0, 0.0}
 
 	bgColor := color.vec3()
 	ret.gl.Call("useProgram", ret.program)
@@ -149,11 +153,36 @@ func (s *Scene) addVoxel(voxels ...*Voxel) {
 	s.update = true
 }
 
+func (s *Scene) moveCamera(x, y, z float32) {
+	s.cameraLoc[0] += x
+	s.cameraLoc[1] += y
+	s.cameraLoc[2] += z
+	s.setModelMat(-s.cameraLoc[0], -s.cameraLoc[1], -s.cameraLoc[2],
+		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
+}
+
+func (s *Scene) setCameraLoc(x, y, z float32) {
+	s.cameraLoc[0] = x
+	s.cameraLoc[1] = y
+	s.cameraLoc[2] = z
+	s.setModelMat(-s.cameraLoc[0], -s.cameraLoc[1], -s.cameraLoc[2],
+		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
+}
+
+func (s *Scene) rotateCamera(x, y, z float32) {
+	s.cameraRot[0] += x
+	s.cameraRot[1] += y
+	s.cameraRot[2] += z
+	s.setModelMat(-s.cameraLoc[0], -s.cameraLoc[1], -s.cameraLoc[2],
+		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
+}
+
 func (s *Scene) setProjMat(deg float32) {
 	// Generate a projection matrix
 	ratio := float32(s.width) / float32(s.height)
 
 	projMatrix := mgl32.Perspective(mgl32.DegToRad(deg), ratio, 1, 100.0)
+	// projMatrix = mgl32.Ortho(-5, 5, -5, 5, 1, 100)
 	var projMatrixBuffer *[16]float32
 	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
 	s.projMat = js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
@@ -167,16 +196,19 @@ func (s *Scene) setViewMat(eye, center, up mgl32.Vec3) {
 	s.viewMat = js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
 }
 
-func (s *Scene) setModelMat(rotX, rotY, rotZ float32) {
+func (s *Scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 	// Generate a model matrix
 	movMatrix := mgl32.HomogRotate3DX(rotX)
 	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DY(rotY))
 	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DZ(rotZ))
+	movMatrix[12] = tranX
+	movMatrix[13] = tranY
+	movMatrix[14] = tranZ
 
 	var modelMatrixBuffer *[16]float32
 	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
 
-	//TODO this call is leaking memory, find out why/ how to stop it!
+	//TODO this call is leaking memory in tiny go, find out why/ how to stop it!
 	s.modelMat = js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 }
 

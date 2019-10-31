@@ -3,6 +3,11 @@
 const WASM_URL = 'wasm.wasm';
 var wasm;
 
+// Prevent the context menue on the canvas
+document.getElementById("gocanvas").oncontextmenu = (e) => {
+  e.preventDefault();
+}
+
 // Render one frame of the animation
 function renderFrame(evt) {
   wasm.exports.renderFrame(evt);

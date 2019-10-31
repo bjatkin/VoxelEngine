@@ -5,8 +5,10 @@ import (
 )
 
 type mouse struct {
-	x           float64
-	y           float64
+	x           float32
+	y           float32
+	dx          float32
+	dy          float32
 	leftClick   bool
 	rightClick  bool
 	middleClick bool
@@ -35,24 +37,37 @@ func (m *mouse) init(doc, canvas js.Value) {
 			m.rightClick = true
 		}
 
-		m.x = evt.Get("clientX").Float()
-		m.y = evt.Get("clientY").Float()
+		newX := float32(evt.Get("clientX").Float())
+		newY := float32(evt.Get("clientY").Float())
+		m.dx = newX - m.x
+		m.dy = newY - m.y
+		m.x = newX
+		m.y = newY
 		return nil
 	})
 
 	mouseUpEvt := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		m.leftClick = false
 		m.rightClick = false
+		m.middleClick = false
 		return nil
 	})
 
 	mouseMoveEvt := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		evt := args[0]
 		if evt.Get("target") != canvas {
+			m.leftClick = false
+			m.rightClick = false
+			m.middleClick = false
 			return nil
 		}
-		m.x = evt.Get("clientX").Float()
-		m.y = evt.Get("clientX").Float()
+
+		newX := float32(evt.Get("clientX").Float())
+		newY := float32(evt.Get("clientY").Float())
+		m.dx = newX - m.x
+		m.dy = newY - m.y
+		m.x = newX
+		m.y = newY
 		return nil
 	})
 

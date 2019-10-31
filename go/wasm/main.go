@@ -10,12 +10,12 @@ import (
 
 var (
 	glTypes    gltypes.GLTypes
-	tmark      float64
+	tmark      float32
 	mouseInput mouse
+	keyInput   keyboard
 )
 
 func main() {
-	fmt.Printf("Start\n")
 	//Get the canvas element
 	doc := js.Global().Get("document")
 	goCanvas := doc.Call("getElementById", "gocanvas")
@@ -26,15 +26,19 @@ func main() {
 	//Start listening for input
 	mouseInput = mouse{}
 	mouseInput.init(doc, goCanvas)
+	keyInput = keyboard{}
+	keyInput.init(doc, goCanvas)
 
 	//Create the base scene
-	baseColor := newRGBSet(61, 191, 189)
+	baseColor := newRGBSet(114, 237, 235)
 	scene.addVoxel(
 		newVoxel(0, 0, 0, baseColor),
 		newVoxel(-1, 0, 0, baseColor),
 		newVoxel(-1, 0, 1, baseColor),
 		newVoxel(0, 0, 1, baseColor),
 	)
+	scene.moveCamera(0, 1, 7)
+	scene.rotateCamera(0, 0, 0)
 
 	//Start the render loop
 	start(newWebGL(scene))
@@ -46,28 +50,68 @@ func main() {
 	<-done
 }
 
-var Rot = float32(0.0)
+var (
+	zoomStart    float32
+	originalZoom float32
+	applyZoom    float32
+	zooming      bool
+)
 
-func update(deltaT float64, scenes []*Scene) {
+func update(deltaT float32, scenes []*Scene) {
 	S := scenes[0]
-	if mouseInput.leftClick {
-		v := len(S.voxels)
-		r := rand.Intn(v)
-		new := S.voxels[r].newVoxelNeighbor(upFace)
-		S.addVoxel(new)
-		mouseInput.leftClick = false
+
+	mouseSpeed := float32(0.5)
+	mdx, mdy := (mouseInput.dx*mouseSpeed)/deltaT, (mouseInput.dy*mouseSpeed)/deltaT
+
+	if (keyInput.keys[leftShift] && mouseInput.leftClick) || mouseInput.middleClick {
+		//Pan
+		S.moveCamera(-mdx, mdy, 0)
 	}
 
-	Rot += float32(deltaT / 900.0)
-	S.setModelMat(0.5*Rot, 0.2*Rot, 0.3*Rot)
+	if keyInput.keys[leftAlt] && mouseInput.leftClick {
+		//Rotate
+		S.rotateCamera(0, mdx, mdy)
+	}
+
+	if mouseInput.rightClick {
+		//Zoom
+		if !zooming {
+			originalZoom = S.cameraLoc[2]
+			zoomStart = mouseInput.y
+			zooming = true
+		}
+		cy := zoomStart - mouseInput.y
+		cy = cy / deltaT
+
+		dx := cy
+		applyZoom = dx
+		S.setCameraLoc(S.cameraLoc[0], S.cameraLoc[1], originalZoom+applyZoom)
+	}
+
+	if !mouseInput.rightClick && zooming {
+		fmt.Printf("ending zoom\n")
+		zooming = false
+	}
+
+	if !keyInput.keys[leftAlt] && !keyInput.keys[leftShift] && mouseInput.leftClick {
+		//Select Voxel face
+		if mouseInput.leftClick {
+			v := len(S.voxels)
+			r := rand.Intn(v)
+			new := S.voxels[r].newVoxelNeighbor(upFace)
+			S.addVoxel(new)
+			mouseInput.leftClick = false
+		}
+	}
 }
 
 func start(context WebGl) {
 	globalConetxt = context
 
 	//Needs to be added in if you're not compiling with tinygo
+	//This will export the renderFrame function
 	js.Global().Set("renderFrame", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		renderFrame(args[0].Float())
+		renderFrame(float32(args[0].Float()))
 		return nil
 	}))
 
@@ -76,7 +120,7 @@ func start(context WebGl) {
 }
 
 //go:export renderFrame
-func renderFrame(now float64) {
+func renderFrame(now float32) {
 	deltaT := now - tmark
 	tmark = now
 
