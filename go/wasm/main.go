@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"syscall/js"
 
@@ -60,8 +59,7 @@ var (
 func update(deltaT float32, scenes []*Scene) {
 	S := scenes[0]
 
-	mouseSpeed := float32(0.5)
-	mdx, mdy := (mouseInput.dx*mouseSpeed)/deltaT, (mouseInput.dy*mouseSpeed)/deltaT
+	mdx, mdy := mouseInput.dx/deltaT, mouseInput.dy/deltaT
 
 	if (keyInput.keys[leftShift] && mouseInput.leftClick) || mouseInput.middleClick {
 		//Pan
@@ -70,7 +68,7 @@ func update(deltaT float32, scenes []*Scene) {
 
 	if keyInput.keys[leftAlt] && mouseInput.leftClick {
 		//Rotate
-		S.rotateCamera(0, mdx, mdy)
+		S.rotateCamera(0, mdx*0.5, mdy*0.5)
 	}
 
 	if mouseInput.rightClick {
@@ -81,7 +79,7 @@ func update(deltaT float32, scenes []*Scene) {
 			zooming = true
 		}
 		cy := zoomStart - mouseInput.y
-		cy = cy / deltaT
+		cy = cy * 0.5 / deltaT
 
 		dx := cy
 		applyZoom = dx
@@ -89,7 +87,6 @@ func update(deltaT float32, scenes []*Scene) {
 	}
 
 	if !mouseInput.rightClick && zooming {
-		fmt.Printf("ending zoom\n")
 		zooming = false
 	}
 
