@@ -20,51 +20,96 @@ type Voxel struct {
 	centers [6]mgl32.Vec3
 }
 
-func (v *Voxel) intersect(r *Ray, closest float32) (int, bool) {
+func (v *Voxel) intersect(r *Ray, closest float32) (int, float32, bool) {
+	// if v.x == 2 {
+	// 	fmt.Printf("x: %f, z: %f\n", v.x, v.z)
+	// }
+	retFace := -1
+	retLen := float32(0.0)
+	retHit := false
 	for i := 0; i < 6; i++ {
 		var newR mgl32.Vec3
 		center := v.centers[i]
+		// if v.x == 2.0 && center[2] <= 0 && int((center[2]-0.5)*10)%10 == 0 {
+		// 	fmt.Printf("base: (%f, %f, %f) - start cube %v\n", v.x, v.y, v.z, center)
+		// }
+		// fmt.Printf("center: %v\n", center)
+
 		if i == frontFace || i == backFace {
+			if r.dir[2] == 0 {
+				continue
+			}
 			newZ := center[2] - r.orig[2]
-			scale := r.orig[2] / newZ
+			scale := newZ / r.dir[2]
 			newR = mgl32.Vec3{r.dir[0] * scale, r.dir[1] * scale, newZ}
 		}
 		if i == leftFace || i == rightFace {
+			if r.dir[0] == 0 {
+				continue
+			}
 			newX := center[0] - r.orig[0]
-			scale := r.orig[0] / newX
+			scale := newX / r.dir[0]
 			newR = mgl32.Vec3{newX, r.dir[1] * scale, r.dir[2] * scale}
 		}
 		if i == upFace || i == downFace {
+			if r.dir[1] == 0 {
+				continue
+			}
 			newY := center[1] - r.orig[1]
-			scale := r.orig[2] / newY
+			scale := newY / r.dir[1]
 			newR = mgl32.Vec3{r.dir[0] * scale, newY, r.dir[2] * scale}
+			// fmt.Printf("Front/ Back\n Scale: %f, newZ: %f, center: %f, Orig: %f", newZ, scale, center[2], r.orig[2])
 		}
 
-		if newR.Len() > closest {
+		// fmt.Printf("New Dir: %v\n", newR)
+		len := newR.Len()
+		if len > closest || len <= 0 {
 			continue
 		}
 
+		newDest := newR.Add(r.orig)
+
 		if i == frontFace || i == backFace {
-			if newR[0] > center[0]-0.5 && newR[0] < center[0]+0.5 &&
-				newR[1] > center[1]-0.5 && newR[1] < center[1]+0.5 {
-				return i, true
+			if newDest[0] > center[0]-0.5 && newDest[0] < center[0]+0.5 &&
+				newDest[1] > center[1]-0.5 && newDest[1] < center[1]+0.5 {
+				retFace = i
+				retLen = len
+				closest = len
+				retHit = true
+				continue
+				// return i, len, true
 			}
 		}
 		if i == leftFace || i == rightFace {
-			if newR[2] > center[2]-0.5 && newR[2] < center[2]+0.5 &&
-				newR[1] > center[1]-0.5 && newR[1] < center[1]+0.5 {
-				return i, true
+			if newDest[2] > center[2]-0.5 && newDest[2] < center[2]+0.5 &&
+				newDest[1] > center[1]-0.5 && newDest[1] < center[1]+0.5 {
+				retFace = i
+				retLen = len
+				closest = len
+				retHit = true
+				continue
+				// return i, len, true
 			}
 		}
 		if i == upFace || i == downFace {
-			if newR[0] > center[0]-0.5 && newR[0] < center[0]+0.5 &&
-				newR[2] > center[2]-0.5 && newR[2] < center[2]+0.5 {
-				return i, true
+			// if center[0] == 2.5 && center[2] == -1.5 {
+			// 	fmt.Printf("a: %v, b: %v, c: %v, d: %v\n", newDest[0] > center[0]-0.5, newDest[0] < center[0]+0.5, newDest[2] > center[2]-0.5, newDest[2] < center[2]+0.5)
+			// 	fmt.Printf("center: %v\n", center)
+			// 	fmt.Printf("new dest: %v\n", newDest)
+			// }
+			if newDest[0] > center[0]-0.5 && newDest[0] < center[0]+0.5 &&
+				newDest[2] > center[2]-0.5 && newDest[2] < center[2]+0.5 {
+				retFace = i
+				retLen = len
+				closest = len
+				retHit = true
+				continue
+				// return i, len, true
 			}
 		}
 	}
 
-	return -1, false
+	return retFace, retLen, retHit
 }
 
 func newVoxel(x, y, z float32, col [6]RGB) *Voxel {
@@ -89,6 +134,18 @@ func newVoxel(x, y, z float32, col [6]RGB) *Voxel {
 	return &ret
 }
 
+func (v *Voxel) setColor(rgb RGB, face ...int) {
+	for i := 0; i < 6; i++ {
+		for _, f := range face {
+			if i == f {
+				v.color[i] = rgb
+			}
+		}
+	}
+
+	v.buildVertexData()
+}
+
 func (v *Voxel) buildVertexData() {
 	x, y, z := v.x, v.y, v.z
 	a, b, c := x+1.0, y+1.0, z-1.0
@@ -105,7 +162,7 @@ func (v *Voxel) buildVertexData() {
 	r6, g6, b6 := col[5][0], col[5][1], col[5][2]
 
 	v.data = [324]float32{
-		// loc  | color     | norm
+		// loc  | color     | norm  |
 		x, y, z, r1, g1, b1, 0, 0, 1,
 		a, y, z, r1, g1, b1, 0, 0, 1,
 		a, b, z, r1, g1, b1, 0, 0, 1, //1

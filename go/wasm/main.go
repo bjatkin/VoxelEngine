@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math/rand"
 	"syscall/js"
 
 	"github.com/bobcat7/wasm-rotating-cube/gltypes"
@@ -20,7 +19,7 @@ func main() {
 	goCanvas := doc.Call("getElementById", "gocanvas")
 
 	//Create a new scene
-	scene := newScene(goCanvas, newRGB(28, 46, 43))
+	scene := newScene(goCanvas, newRGB(230, 230, 230))
 
 	//Start listening for input
 	mouseInput = mouse{}
@@ -29,15 +28,18 @@ func main() {
 	keyInput.init(doc, goCanvas)
 
 	//Create the base scene
-	baseColor := newRGBSet(114, 237, 235)
-	scene.addVoxel(
-		newVoxel(0, 0, 0, baseColor),
-		newVoxel(-1, 0, 0, baseColor),
-		newVoxel(-1, 0, 1, baseColor),
-		newVoxel(0, 0, 1, baseColor),
-	)
-	scene.moveCamera(0, 1, 7)
-	scene.rotateCamera(0, 0, 0)
+	baseColor := newRGBSet(235, 254, 255)
+	vox := []*Voxel{}
+	voxCount := 50
+	for x := 0; x < voxCount; x++ {
+		for y := 0; y < voxCount; y++ {
+			vox = append(vox, newVoxel(float32(x)-float32(voxCount)/2, 0, float32(y)-float32(voxCount)/2, baseColor))
+		}
+	}
+	scene.addVoxel(vox...)
+
+	scene.moveCamera(0, 0, 85)
+	scene.rotateCamera(-1, 0, 0)
 
 	//Start the render loop
 	start(newWebGL(scene))
@@ -79,7 +81,7 @@ func update(deltaT float32, scenes []*Scene) {
 			zooming = true
 		}
 		cy := zoomStart - mouseInput.y
-		cy = cy * 0.5 / deltaT
+		cy = cy * 1.5 / deltaT
 
 		dx := cy
 		applyZoom = dx
@@ -93,10 +95,25 @@ func update(deltaT float32, scenes []*Scene) {
 	if !keyInput.keys[leftAlt] && !keyInput.keys[leftShift] && mouseInput.leftClick {
 		//Select Voxel face
 		if mouseInput.leftClick {
-			v := len(S.voxels)
-			r := rand.Intn(v)
-			new := S.voxels[r].newVoxelNeighbor(upFace)
-			S.addVoxel(new)
+			closest := float32(99999999.0)
+			r := newRay(S, mouseInput.x, mouseInput.y)
+			sel := -1
+			selFace := 0
+			for i, v := range S.voxels {
+				face, dist, hit := v.intersect(&r, closest)
+				if hit && dist < closest {
+					closest = dist
+					sel = i
+					selFace = face
+				}
+			}
+
+			if sel >= 0 {
+				v := S.voxels[sel]
+				S.addVoxel(v.newVoxelNeighbor(selFace))
+				// S.voxels[sel].setColor(newRGB(255, 0, 0), selFace)
+				// S.update = true //force the buffers to rebuild
+			}
 			mouseInput.leftClick = false
 		}
 	}

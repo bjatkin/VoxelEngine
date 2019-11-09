@@ -15,12 +15,16 @@ type Scene struct {
 	bufferData    []float32
 	buffLen       int
 
-	projMat   js.TypedArray //Uniforms
-	uProjMat  js.Value
-	viewMat   js.TypedArray
-	uViewMat  js.Value
-	modelMat  js.TypedArray
-	uModelMat js.Value
+	projMat        js.TypedArray //Uniforms
+	uProjMat       js.Value
+	rawProjMat     mgl32.Mat4
+	viewMat        js.TypedArray
+	uViewMat       js.Value
+	rawViewMat     mgl32.Mat4
+	modelMat       js.TypedArray
+	uModelMat      js.Value
+	rawModelMat    mgl32.Mat4
+	rawModelRotMat mgl32.Mat4
 
 	aColor    js.Value //attributes
 	aPosition js.Value
@@ -46,7 +50,7 @@ varying vec3 v_Normal;
 
 void main(void) {
 	gl_Position = u_Pmatrix*u_Vmatrix*u_Mmatrix*vec4(a_Position, 1.0);
-	v_Normal = vec3( u_Pmatrix*u_Vmatrix*u_Mmatrix*vec4(a_Normal, 0.0));
+	v_Normal = vec3(u_Pmatrix*u_Vmatrix*u_Mmatrix*vec4(a_Normal, 0.0));
 	v_Color = a_Color;
 }
 `
@@ -63,7 +67,7 @@ void main(void) {
 	float ambient_light;
 
 	//normalized 1, 1, 1
-	to_light = vec3(0.57735026919, 0.57735026919, 0.57735026919);
+	to_light = vec3(0.57735026919, 0.57735026919, -0.57735026919);
 
 	//amount of ambient light in the scene
 	ambient_light = 0.3;
@@ -177,15 +181,24 @@ func (s *Scene) rotateCamera(x, y, z float32) {
 		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
 }
 
+func (s *Scene) setCameraRot(x, y, z float32) {
+	s.cameraRot[0] = x
+	s.cameraRot[1] = y
+	s.cameraRot[2] = z
+	s.setModelMat(-s.cameraLoc[0], -s.cameraLoc[1], -s.cameraLoc[2],
+		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
+}
+
 func (s *Scene) setProjMat(deg float32) {
 	// Generate a projection matrix
 	ratio := float32(s.width) / float32(s.height)
 
-	projMatrix := mgl32.Perspective(mgl32.DegToRad(deg), ratio, 1, 100.0)
+	projMatrix := mgl32.Perspective(mgl32.DegToRad(deg), ratio, 1, 1000.0)
 	// projMatrix = mgl32.Ortho(-5, 5, -5, 5, 1, 100)
 	var projMatrixBuffer *[16]float32
 	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
 	s.projMat = js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
+	s.rawProjMat = projMatrix
 }
 
 func (s *Scene) setViewMat(eye, center, up mgl32.Vec3) {
@@ -194,6 +207,7 @@ func (s *Scene) setViewMat(eye, center, up mgl32.Vec3) {
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
 	s.viewMat = js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
+	s.rawViewMat = viewMatrix
 }
 
 func (s *Scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
@@ -201,6 +215,7 @@ func (s *Scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 	movMatrix := mgl32.HomogRotate3DX(rotX)
 	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DY(rotY))
 	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DZ(rotZ))
+	s.rawModelRotMat = movMatrix
 	movMatrix[12] = tranX
 	movMatrix[13] = tranY
 	movMatrix[14] = tranZ
@@ -210,6 +225,7 @@ func (s *Scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 
 	//TODO this call is leaking memory in tiny go, find out why/ how to stop it!
 	s.modelMat = js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
+	s.rawModelMat = movMatrix
 }
 
 func (s *Scene) render() {
