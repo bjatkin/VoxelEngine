@@ -14,26 +14,21 @@ const (
 )
 
 type Voxel struct {
-	x, y, z float32
-	color   [6]RGB
-	data    [324]float32
-	centers [6]mgl32.Vec3
+	x, y, z   float32
+	color     [6]RGB
+	prevColor [6]RGB
+	selected  [6]bool
+	data      [324]float32
+	centers   [6]mgl32.Vec3
 }
 
 func (v *Voxel) intersect(r *Ray, closest float32) (int, float32, bool) {
-	// if v.x == 2 {
-	// 	fmt.Printf("x: %f, z: %f\n", v.x, v.z)
-	// }
 	retFace := -1
 	retLen := float32(0.0)
 	retHit := false
 	for i := 0; i < 6; i++ {
 		var newR mgl32.Vec3
 		center := v.centers[i]
-		// if v.x == 2.0 && center[2] <= 0 && int((center[2]-0.5)*10)%10 == 0 {
-		// 	fmt.Printf("base: (%f, %f, %f) - start cube %v\n", v.x, v.y, v.z, center)
-		// }
-		// fmt.Printf("center: %v\n", center)
 
 		if i == frontFace || i == backFace {
 			if r.dir[2] == 0 {
@@ -58,10 +53,8 @@ func (v *Voxel) intersect(r *Ray, closest float32) (int, float32, bool) {
 			newY := center[1] - r.orig[1]
 			scale := newY / r.dir[1]
 			newR = mgl32.Vec3{r.dir[0] * scale, newY, r.dir[2] * scale}
-			// fmt.Printf("Front/ Back\n Scale: %f, newZ: %f, center: %f, Orig: %f", newZ, scale, center[2], r.orig[2])
 		}
 
-		// fmt.Printf("New Dir: %v\n", newR)
 		len := newR.Len()
 		if len > closest || len <= 0 {
 			continue
@@ -77,7 +70,6 @@ func (v *Voxel) intersect(r *Ray, closest float32) (int, float32, bool) {
 				closest = len
 				retHit = true
 				continue
-				// return i, len, true
 			}
 		}
 		if i == leftFace || i == rightFace {
@@ -88,15 +80,9 @@ func (v *Voxel) intersect(r *Ray, closest float32) (int, float32, bool) {
 				closest = len
 				retHit = true
 				continue
-				// return i, len, true
 			}
 		}
 		if i == upFace || i == downFace {
-			// if center[0] == 2.5 && center[2] == -1.5 {
-			// 	fmt.Printf("a: %v, b: %v, c: %v, d: %v\n", newDest[0] > center[0]-0.5, newDest[0] < center[0]+0.5, newDest[2] > center[2]-0.5, newDest[2] < center[2]+0.5)
-			// 	fmt.Printf("center: %v\n", center)
-			// 	fmt.Printf("new dest: %v\n", newDest)
-			// }
 			if newDest[0] > center[0]-0.5 && newDest[0] < center[0]+0.5 &&
 				newDest[2] > center[2]-0.5 && newDest[2] < center[2]+0.5 {
 				retFace = i
@@ -227,4 +213,23 @@ func (v *Voxel) newVoxelNeighbor(face int) *Voxel {
 
 	fCol := v.color[face]
 	return newVoxel(x, y, z, newRGBSet(fCol.r, fCol.g, fCol.b))
+}
+
+func (v *Voxel) selectFace(face int) bool {
+	if v.selected[face] {
+		return false
+	}
+	v.selected[face] = true
+	v.prevColor[face] = v.color[face]
+	v.setColor(RGB{255, 0, 0}, face)
+	return true
+}
+
+func (v *Voxel) deselectFace(face int) bool {
+	if !v.selected[face] {
+		return false
+	}
+	v.selected[face] = false
+	v.setColor(v.prevColor[face], face)
+	return true
 }

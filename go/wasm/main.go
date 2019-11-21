@@ -3,6 +3,8 @@ package main
 import (
 	"syscall/js"
 
+	"github.com/go-gl/mathgl/mgl32"
+
 	"github.com/bobcat7/wasm-rotating-cube/gltypes"
 )
 
@@ -52,25 +54,30 @@ func main() {
 }
 
 var (
-	zoomStart    float32
-	originalZoom float32
-	applyZoom    float32
-	zooming      bool
+	zoomStart         float32
+	originalZoom      float32
+	applyZoom         float32
+	zooming           bool
+	selectMode        bool
+	selectStartCorner mgl32.Vec2
+	selectEndCorner   mgl32.Vec2
 )
 
 func update(deltaT float32, scenes []*Scene) {
 	S := scenes[0]
 
-	mdx, mdy := mouseInput.dx/deltaT, mouseInput.dy/deltaT
+	mdx, mdy := (mouseInput.dx/deltaT)/float32(S.width), (mouseInput.dy/deltaT)/float32(S.height)
 
 	if (keyInput.keys[leftShift] && mouseInput.leftClick) || mouseInput.middleClick {
 		//Pan
-		S.moveCamera(-mdx, mdy, 0)
+		panSpeed := float32(5000.0)
+		S.moveCamera(-mdx*panSpeed, mdy*panSpeed, 0)
 	}
 
 	if keyInput.keys[leftAlt] && mouseInput.leftClick {
 		//Rotate
-		S.rotateCamera(0, mdx*0.5, mdy*0.5)
+		rotateSpeed := float32(700.0)
+		S.rotateCamera(0, mdx*rotateSpeed, mdy*rotateSpeed)
 	}
 
 	if mouseInput.rightClick {
@@ -93,29 +100,23 @@ func update(deltaT float32, scenes []*Scene) {
 	}
 
 	if !keyInput.keys[leftAlt] && !keyInput.keys[leftShift] && mouseInput.leftClick {
-		//Select Voxel face
-		if mouseInput.leftClick {
-			closest := float32(99999999.0)
-			r := newRay(S, mouseInput.x, mouseInput.y)
-			sel := -1
-			selFace := 0
-			for i, v := range S.voxels {
-				face, dist, hit := v.intersect(&r, closest)
-				if hit && dist < closest {
-					closest = dist
-					sel = i
-					selFace = face
-				}
-			}
-
-			if sel >= 0 {
-				v := S.voxels[sel]
-				S.addVoxel(v.newVoxelNeighbor(selFace))
-				// S.voxels[sel].setColor(newRGB(255, 0, 0), selFace)
-				// S.update = true //force the buffers to rebuild
-			}
-			mouseInput.leftClick = false
+		if !selectMode {
+			selectStartCorner = mgl32.Vec2{mouseInput.x, mouseInput.y}
+			selectEndCorner = selectStartCorner
 		}
+
+		selectMode = true
+		//Release the old selection
+		clearSelection(S, selectStartCorner, selectEndCorner)
+
+		//Hilight the new selection
+		selectEndCorner = mgl32.Vec2{mouseInput.x, mouseInput.y}
+		hilightSelection(S, selectStartCorner, selectEndCorner)
+	}
+
+	if !mouseInput.leftClick && selectMode {
+		// lock in a selection
+		selectMode = false
 	}
 }
 

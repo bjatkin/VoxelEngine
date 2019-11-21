@@ -37,7 +37,7 @@ func (m *mouse) init(doc, canvas js.Value) {
 			m.rightClick = true
 		}
 
-		newX := float32(evt.Get("clientX").Float())
+		newX := float32(evt.Get("clientX").Float()) - 135
 		newY := float32(evt.Get("clientY").Float())
 		m.dx = newX - m.x
 		m.dy = newY - m.y
@@ -62,7 +62,7 @@ func (m *mouse) init(doc, canvas js.Value) {
 			return nil
 		}
 
-		newX := float32(evt.Get("clientX").Float())
+		newX := float32(evt.Get("clientX").Float()) - 135
 		newY := float32(evt.Get("clientY").Float())
 		m.dx = newX - m.x
 		m.dy = newY - m.y

@@ -15,6 +15,9 @@ type Scene struct {
 	bufferData    []float32
 	buffLen       int
 
+	dataBuff    js.Value //data buffer
+	dataBuffSet bool
+
 	projMat        js.TypedArray //Uniforms
 	uProjMat       js.Value
 	rawProjMat     mgl32.Mat4
@@ -122,18 +125,27 @@ func (s *Scene) buildBufferData() {
 	}
 
 	s.update = false
-	s.bufferData = []float32{}
 	s.buffLen = 0
-	for _, v := range s.voxels {
-		for _, d := range v.data {
-			s.bufferData = append(s.bufferData, d)
+	for i, v := range s.voxels {
+		for j, d := range v.data {
+			spot := i*324 + j
+			if spot >= len(s.bufferData) {
+				s.bufferData = append(s.bufferData, d)
+			} else {
+				s.bufferData[spot] = d
+			}
 			s.buffLen++
 		}
 	}
 
 	// Create a data buffer
 	tArray := js.TypedArrayOf(s.bufferData)
-	dataBuff := s.gl.Call("createBuffer")
+	dataBuff := s.dataBuff
+	if !s.dataBuffSet {
+		dataBuff = s.gl.Call("createBuffer")
+		s.dataBuff = dataBuff
+		s.dataBuffSet = true
+	}
 
 	// Bind the data into the buffer
 	float32Bytes := 4
@@ -144,7 +156,7 @@ func (s *Scene) buildBufferData() {
 	s.buffLen /= posSize + colSize + normSize
 
 	s.gl.Call("bindBuffer", glTypes.ArrayBuffer, dataBuff)
-	s.gl.Call("bufferData", glTypes.ArrayBuffer, tArray, glTypes.StaticDraw)
+	s.gl.Call("bufferData", glTypes.ArrayBuffer, tArray, glTypes.DynamicDraw)
 	s.gl.Call("vertexAttribPointer", s.aPosition, posSize, glTypes.Float, false, vertexByteSize, 0)
 	s.gl.Call("vertexAttribPointer", s.aColor, colSize, glTypes.Float, false, vertexByteSize, posSize*float32Bytes)
 	s.gl.Call("vertexAttribPointer", s.aNormal, colSize, glTypes.Float, false, vertexByteSize, posSize*float32Bytes+colSize*float32Bytes)
@@ -194,7 +206,7 @@ func (s *Scene) setProjMat(deg float32) {
 	ratio := float32(s.width) / float32(s.height)
 
 	projMatrix := mgl32.Perspective(mgl32.DegToRad(deg), ratio, 1, 1000.0)
-	// projMatrix = mgl32.Ortho(-5, 5, -5, 5, 1, 100)
+
 	var projMatrixBuffer *[16]float32
 	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
 	s.projMat = js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
@@ -204,6 +216,7 @@ func (s *Scene) setProjMat(deg float32) {
 func (s *Scene) setViewMat(eye, center, up mgl32.Vec3) {
 	// Generate a view matrix
 	viewMatrix := mgl32.LookAtV(eye, center, up)
+
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
 	s.viewMat = js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
@@ -222,8 +235,6 @@ func (s *Scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 
 	var modelMatrixBuffer *[16]float32
 	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
-
-	//TODO this call is leaking memory in tiny go, find out why/ how to stop it!
 	s.modelMat = js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 	s.rawModelMat = movMatrix
 }
