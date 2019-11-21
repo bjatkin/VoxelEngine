@@ -212,17 +212,21 @@ func (v *Voxel) newVoxelNeighbor(face int) *Voxel {
 	}
 
 	fCol := v.color[face]
-	return newVoxel(x, y, z, newRGBSet(fCol.r, fCol.g, fCol.b))
+	if v.selected[face] {
+		fCol = v.prevColor[face]
+	}
+	vox := newVoxel(x, y, z, newRGBSet(fCol.r, fCol.g, fCol.b))
+	vox.selectFace(face)
+	return vox
 }
 
-func (v *Voxel) selectFace(face int) bool {
+func (v *Voxel) selectFace(face int) {
 	if v.selected[face] {
-		return false
+		return
 	}
 	v.selected[face] = true
 	v.prevColor[face] = v.color[face]
 	v.setColor(RGB{255, 0, 0}, face)
-	return true
 }
 
 func (v *Voxel) deselectFace(face int) bool {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"syscall/js"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -61,6 +62,8 @@ var (
 	selectMode        bool
 	selectStartCorner mgl32.Vec2
 	selectEndCorner   mgl32.Vec2
+	addMode           bool
+	subMode           bool
 )
 
 func update(deltaT float32, scenes []*Scene) {
@@ -99,10 +102,12 @@ func update(deltaT float32, scenes []*Scene) {
 		zooming = false
 	}
 
-	if !keyInput.keys[leftAlt] && !keyInput.keys[leftShift] && mouseInput.leftClick {
+	if !keyInput.keys[leftAlt] && !keyInput.keys[leftShift] && !addMode && mouseInput.leftClick {
 		if !selectMode {
 			selectStartCorner = mgl32.Vec2{mouseInput.x, mouseInput.y}
 			selectEndCorner = selectStartCorner
+			currentSelection.emptySelection()
+			fmt.Printf("empty select\n")
 		}
 
 		selectMode = true
@@ -117,6 +122,33 @@ func update(deltaT float32, scenes []*Scene) {
 	if !mouseInput.leftClick && selectMode {
 		// lock in a selection
 		selectMode = false
+	}
+
+	if mouseInput.leftClick && addMode {
+		for i, v := range currentSelection.cubes {
+			if i >= currentSelection.cubesLen {
+				break
+			}
+			vox := v.newVoxelNeighbor(currentSelection.face)
+			currentSelection.cubes[i] = vox
+			S.addVoxel(vox)
+		}
+	}
+
+	if mouseInput.leftClick && subMode {
+		//TODO implement this
+	}
+
+	if keyInput.keys[aKey] {
+		keyInput.keys[aKey] = false
+		addMode = !addMode
+		subMode = !addMode
+	}
+
+	if keyInput.keys[sKey] {
+		keyInput.keys[sKey] = false
+		subMode = !subMode
+		addMode = !subMode
 	}
 }
 
