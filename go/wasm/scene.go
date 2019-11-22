@@ -162,6 +162,14 @@ func (s *Scene) buildBufferData() {
 	s.gl.Call("vertexAttribPointer", s.aNormal, colSize, glTypes.Float, false, vertexByteSize, posSize*float32Bytes+colSize*float32Bytes)
 }
 
+func (s *Scene) removeVoxel(index ...int) {
+	for _, i := range index {
+		s.voxels[i] = s.voxels[len(s.voxels)-1]
+		s.voxels = s.voxels[:len(s.voxels)-1]
+	}
+	s.update = true
+}
+
 func (s *Scene) addVoxel(voxels ...*Voxel) {
 	for _, v := range voxels {
 		s.voxels = append(s.voxels, v)

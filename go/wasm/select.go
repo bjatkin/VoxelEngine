@@ -11,6 +11,7 @@ type selection struct {
 	startVox, endVox *Voxel
 	face             int
 	cubes            []*Voxel
+	cubeIndexes      []int
 	cubesLen         int
 	init             bool
 }
@@ -23,12 +24,14 @@ func (s *selection) emptySelection() {
 	fmt.Printf("deselect faces\n")
 }
 
-func (s *selection) addCube(v *Voxel) {
+func (s *selection) addCube(v *Voxel, index int) {
 	len := len(s.cubes)
 	if s.cubesLen >= len {
 		s.cubes = append(s.cubes, v)
+		s.cubeIndexes = append(s.cubeIndexes, index)
 	} else {
 		s.cubes[s.cubesLen] = v
+		s.cubeIndexes[s.cubesLen] = index
 	}
 	s.cubesLen++
 }
@@ -41,7 +44,7 @@ func hilightSelection(s *Scene, startCorner, endCorner mgl32.Vec2) {
 		currentSelection.init = true
 	}
 
-	vox1, face1, intersect1 := intersectVoxel(s, startCorner)
+	vox1, i1, face1, intersect1 := intersectVoxel(s, startCorner)
 	currentSelection.face = face1
 	if intersect1 {
 		vox1.selectFace(face1)
@@ -49,7 +52,7 @@ func hilightSelection(s *Scene, startCorner, endCorner mgl32.Vec2) {
 		return
 	}
 
-	vox2, face2, intersect2 := intersectVoxel(s, endCorner)
+	vox2, i2, face2, intersect2 := intersectVoxel(s, endCorner)
 	if intersect2 {
 		vox2.selectFace(face2)
 	}
@@ -63,8 +66,8 @@ func hilightSelection(s *Scene, startCorner, endCorner mgl32.Vec2) {
 	}
 
 	currentSelection.emptySelection()
-	currentSelection.addCube(vox1)
-	currentSelection.addCube(vox2)
+	currentSelection.addCube(vox1, i1)
+	currentSelection.addCube(vox2, i2)
 
 	diffX := vox1.x - vox2.x
 	diffY := vox1.y - vox2.y
@@ -106,14 +109,16 @@ func hilightSelection(s *Scene, startCorner, endCorner mgl32.Vec2) {
 			}
 
 			var add *Voxel
-			for _, c := range s.voxels {
+			var addi int
+			for i, c := range s.voxels {
 				if voxDist(c.x, c.y, c.z, cube[0], cube[1], cube[2]) <= 0.01 {
 					add = c
+					addi = i
 					break
 				}
 			}
 
-			currentSelection.addCube(add)
+			currentSelection.addCube(add, addi)
 			// if i >= l {
 			// 	currentSelection.cubes = append(currentSelection.cubes, add)
 			// } else {
@@ -148,12 +153,12 @@ func hilightSelection(s *Scene, startCorner, endCorner mgl32.Vec2) {
 
 func clearSelection(s *Scene, startCorner, endCorner mgl32.Vec2) {
 	del1, del2 := false, false
-	vox1, face1, intersect1 := intersectVoxel(s, startCorner)
+	vox1, _, face1, intersect1 := intersectVoxel(s, startCorner)
 	if intersect1 {
 		del1 = vox1.deselectFace(face1)
 	}
 
-	vox2, face2, intersect2 := intersectVoxel(s, endCorner)
+	vox2, _, face2, intersect2 := intersectVoxel(s, endCorner)
 	if intersect2 {
 		del2 = vox2.deselectFace(face2)
 	}
@@ -169,7 +174,7 @@ func voxDist(x1, y1, z1, x2, y2, z2 float32) float64 {
 		math.Abs(float64(z1-z2))
 }
 
-func intersectVoxel(s *Scene, point mgl32.Vec2) (*Voxel, int, bool) {
+func intersectVoxel(s *Scene, point mgl32.Vec2) (*Voxel, int, int, bool) {
 	closest := float32(99999999.0)
 	r := newRay(s, point[0], point[1])
 	sel := -1
@@ -184,7 +189,7 @@ func intersectVoxel(s *Scene, point mgl32.Vec2) (*Voxel, int, bool) {
 	}
 
 	if sel >= 0 {
-		return s.voxels[sel], selFace, true
+		return s.voxels[sel], sel, selFace, true
 	}
-	return &Voxel{}, -1, false
+	return &Voxel{}, -1, -1, false
 }

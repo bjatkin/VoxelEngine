@@ -125,30 +125,48 @@ func update(deltaT float32, scenes []*Scene) {
 	}
 
 	if mouseInput.leftClick && addMode {
-		for i, v := range currentSelection.cubes {
-			if i >= currentSelection.cubesLen {
-				break
+		// check if we're clicking on a selected voxel face
+		v, _, f, succ := intersectVoxel(S, mgl32.Vec2{mouseInput.x, mouseInput.y})
+		if succ && v.selected[f] {
+			for i, v := range currentSelection.cubes {
+				if i >= currentSelection.cubesLen {
+					break
+				}
+				vox := v.newVoxelNeighbor(currentSelection.face)
+				currentSelection.cubes[i] = vox
+				S.addVoxel(vox)
 			}
-			vox := v.newVoxelNeighbor(currentSelection.face)
-			currentSelection.cubes[i] = vox
-			S.addVoxel(vox)
+			fmt.Printf("Add: %v\n", currentSelection.cubes[:currentSelection.cubesLen])
 		}
 	}
 
 	if mouseInput.leftClick && subMode {
 		//TODO implement this
+		vox, _, f, succ := intersectVoxel(S, mgl32.Vec2{mouseInput.x, mouseInput.y})
+		remove := []int{}
+		if succ && vox.selected[f] {
+			for i, v := range currentSelection.cubeIndexes {
+				if i >= currentSelection.cubesLen {
+					break
+				}
+				remove = append(remove, v)
+			}
+			currentSelection.emptySelection()
+			fmt.Printf("Remove: %v\n", remove)
+			S.removeVoxel(remove...)
+		}
 	}
 
 	if keyInput.keys[aKey] {
 		keyInput.keys[aKey] = false
 		addMode = !addMode
-		subMode = !addMode
+		subMode = false
 	}
 
 	if keyInput.keys[sKey] {
 		keyInput.keys[sKey] = false
 		subMode = !subMode
-		addMode = !subMode
+		addMode = false
 	}
 }
 
