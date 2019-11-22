@@ -163,18 +163,22 @@ func (s *Scene) buildBufferData() {
 }
 
 func (s *Scene) removeVoxel(index ...int) {
-	for _, i := range index {
-		s.voxels[i] = s.voxels[len(s.voxels)-1]
-		s.voxels = s.voxels[:len(s.voxels)-1]
+	l := len(index)
+	for d, i := range index {
+		s.voxels[i] = s.voxels[len(s.voxels)-(1+d)]
 	}
+	s.voxels = s.voxels[:len(s.voxels)-l]
 	s.update = true
 }
 
-func (s *Scene) addVoxel(voxels ...*Voxel) {
+func (s *Scene) addVoxel(voxels ...*Voxel) []int {
+	ret := []int{}
 	for _, v := range voxels {
 		s.voxels = append(s.voxels, v)
+		ret = append(ret, len(s.voxels)-1)
 	}
 	s.update = true
+	return ret
 }
 
 func (s *Scene) moveCamera(x, y, z float32) {

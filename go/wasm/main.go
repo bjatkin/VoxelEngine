@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"syscall/js"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -10,10 +9,11 @@ import (
 )
 
 var (
-	glTypes    gltypes.GLTypes
-	tmark      float32
-	mouseInput mouse
-	keyInput   keyboard
+	glTypes      gltypes.GLTypes
+	tmark        float32
+	mouseInput   mouse
+	keyInput     keyboard
+	curSelection selection
 )
 
 func main() {
@@ -43,6 +43,9 @@ func main() {
 
 	scene.moveCamera(0, 0, 85)
 	scene.rotateCamera(-1, 0, 0)
+
+	//Set up the selection tracker
+	curSelection = newSelection()
 
 	//Start the render loop
 	start(newWebGL(scene))
@@ -79,7 +82,7 @@ func update(deltaT float32, scenes []*Scene) {
 
 	if keyInput.keys[leftAlt] && mouseInput.leftClick {
 		//Rotate
-		rotateSpeed := float32(700.0)
+		rotateSpeed := float32(500.0)
 		S.rotateCamera(0, mdx*rotateSpeed, mdy*rotateSpeed)
 	}
 
@@ -102,21 +105,17 @@ func update(deltaT float32, scenes []*Scene) {
 		zooming = false
 	}
 
-	if !keyInput.keys[leftAlt] && !keyInput.keys[leftShift] && !addMode && mouseInput.leftClick {
+	if !keyInput.keys[leftAlt] && !keyInput.keys[leftShift] && !addMode && !subMode && mouseInput.leftClick {
 		if !selectMode {
 			selectStartCorner = mgl32.Vec2{mouseInput.x, mouseInput.y}
 			selectEndCorner = selectStartCorner
-			currentSelection.emptySelection()
-			fmt.Printf("empty select\n")
+			curSelection.deselectAll(S)
 		}
 
 		selectMode = true
-		//Release the old selection
-		clearSelection(S, selectStartCorner, selectEndCorner)
-
 		//Hilight the new selection
 		selectEndCorner = mgl32.Vec2{mouseInput.x, mouseInput.y}
-		hilightSelection(S, selectStartCorner, selectEndCorner)
+		curSelection.newSelection(S, selectStartCorner, selectEndCorner)
 	}
 
 	if !mouseInput.leftClick && selectMode {
@@ -126,34 +125,46 @@ func update(deltaT float32, scenes []*Scene) {
 
 	if mouseInput.leftClick && addMode {
 		// check if we're clicking on a selected voxel face
-		v, _, f, succ := intersectVoxel(S, mgl32.Vec2{mouseInput.x, mouseInput.y})
-		if succ && v.selected[f] {
-			for i, v := range currentSelection.cubes {
-				if i >= currentSelection.cubesLen {
-					break
-				}
-				vox := v.newVoxelNeighbor(currentSelection.face)
-				currentSelection.cubes[i] = vox
-				S.addVoxel(vox)
+		i, f, succ := intersectVoxel(S, mgl32.Vec2{mouseInput.x, mouseInput.y})
+		if succ && S.voxels[i].selected[f] {
+			for i, j := range curSelection.voxels() {
+				v := S.voxels[j]
+				v.deselectFace(f)
+				vox := v.newVoxelNeighbor(curSelection.face)
+				index := S.addVoxel(vox)
+				curSelection.allVox[i] = index[0]
 			}
-			fmt.Printf("Add: %v\n", currentSelection.cubes[:currentSelection.cubesLen])
 		}
 	}
 
 	if mouseInput.leftClick && subMode {
 		//TODO implement this
-		vox, _, f, succ := intersectVoxel(S, mgl32.Vec2{mouseInput.x, mouseInput.y})
+		i, f, succ := intersectVoxel(S, mgl32.Vec2{mouseInput.x, mouseInput.y})
 		remove := []int{}
-		if succ && vox.selected[f] {
-			for i, v := range currentSelection.cubeIndexes {
-				if i >= currentSelection.cubesLen {
-					break
+		newSel := []int{}
+		if succ && S.voxels[i].selected[f] {
+			for _, v := range curSelection.voxels() {
+				vox := S.voxels[v]
+				x, y, z := faceToShift(f)
+				add := -1
+				for i, c := range S.voxels {
+					if voxDist(c.x, c.y, c.z, vox.x+x, vox.y+y, vox.z+z) <= 0.01 {
+						add = i
+						break
+					}
+				}
+				if add != -1 {
+					newSel = append(newSel, add)
 				}
 				remove = append(remove, v)
 			}
-			currentSelection.emptySelection()
-			fmt.Printf("Remove: %v\n", remove)
+			curSelection.deselectAll(S)
+			for _, i := range newSel {
+				curSelection.addVox(i)
+			}
+			curSelection.selectAll(S)
 			S.removeVoxel(remove...)
+			S.update = true
 		}
 	}
 
