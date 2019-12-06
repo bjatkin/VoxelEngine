@@ -19,6 +19,7 @@ const (
 	downKey   = 40
 	aKey      = 65
 	sKey      = 83
+	esc       = 27
 )
 
 func (k *keyboard) init(doc, canvas js.Value) {

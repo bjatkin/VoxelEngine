@@ -5,14 +5,14 @@ import (
 )
 
 type RGB struct {
-	r, g, b float32
+	R, G, B float32
 }
 
 func newRGB(r, g, b float32) RGB {
 	return RGB{
-		r: r,
-		g: g,
-		b: b,
+		R: r,
+		G: g,
+		B: b,
 	}
 }
 
@@ -29,8 +29,8 @@ func newRGBSet(r, g, b float32) [6]RGB {
 
 func (rgb *RGB) vec3() mgl32.Vec3 {
 	return mgl32.Vec3{
-		rgb.r / 255.0,
-		rgb.g / 255.0,
-		rgb.b / 255.0,
+		rgb.R / 255.0,
+		rgb.G / 255.0,
+		rgb.B / 255.0,
 	}
 }

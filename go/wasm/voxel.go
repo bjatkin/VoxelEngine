@@ -13,6 +13,15 @@ const (
 	downFace  = 5
 )
 
+type publicVoxel struct {
+	X, Y, Z float32
+	Color   [6]RGB
+}
+
+func (v *publicVoxel) private() *Voxel {
+	return newVoxel(v.X, v.Y, v.Z, v.Color)
+}
+
 type Voxel struct {
 	x, y, z   float32
 	color     [6]RGB
@@ -20,6 +29,15 @@ type Voxel struct {
 	selected  [6]bool
 	data      [324]float32
 	centers   [6]mgl32.Vec3
+}
+
+func (v *Voxel) public() *publicVoxel {
+	return &publicVoxel{
+		X:     v.x,
+		Y:     v.y,
+		Z:     v.z,
+		Color: v.color,
+	}
 }
 
 func (v *Voxel) intersect(r *Ray, closest float32) (int, float32, bool) {
@@ -188,7 +206,7 @@ func (v *Voxel) buildVertexData() {
 	}
 }
 
-func (v *Voxel) newVoxelNeighbor(face int) *Voxel {
+func (v *Voxel) newVoxelNeighbor(face int, selColor RGB) *Voxel {
 	x := v.x
 	y := v.y
 	z := v.z
@@ -215,18 +233,27 @@ func (v *Voxel) newVoxelNeighbor(face int) *Voxel {
 	if v.selected[face] {
 		fCol = v.prevColor[face]
 	}
-	vox := newVoxel(x, y, z, newRGBSet(fCol.r, fCol.g, fCol.b))
-	vox.selectFace(face)
+	vox := newVoxel(x, y, z, newRGBSet(fCol.R, fCol.G, fCol.B))
+	vox.selectFace(face, selColor)
 	return vox
 }
 
-func (v *Voxel) selectFace(face int) {
+func (v *Voxel) selectFace(face int, color RGB) {
 	if v.selected[face] {
 		return
 	}
 	v.selected[face] = true
 	v.prevColor[face] = v.color[face]
-	v.setColor(RGB{255, 0, 0}, face)
+	v.setColor(color, face)
+}
+
+func (v *Voxel) selectFaceColor(color RGB) {
+	for i := 0; i < 6; i++ {
+		if v.selected[i] {
+			v.setColor(color, i)
+			return
+		}
+	}
 }
 
 func (v *Voxel) deselectFace(face int) bool {
@@ -236,4 +263,12 @@ func (v *Voxel) deselectFace(face int) bool {
 	v.selected[face] = false
 	v.setColor(v.prevColor[face], face)
 	return true
+}
+
+func (v *Voxel) colorSelectedFace(color RGB) {
+	for i := 0; i < 6; i++ {
+		if v.selected[i] {
+			v.prevColor[i] = color
+		}
+	}
 }

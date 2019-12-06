@@ -24,9 +24,21 @@ func (sel *selection) deselectAll(s *Scene) {
 	sel.len = 0
 }
 
-func (sel *selection) selectAll(s *Scene) {
+func (sel *selection) selectAll(s *Scene, color RGB) {
 	for _, v := range sel.voxels() {
-		s.voxels[v].selectFace(sel.face)
+		s.voxels[v].selectFace(sel.face, color)
+	}
+}
+
+func (sel *selection) colorSelection(s *Scene, color RGB) {
+	for _, v := range sel.voxels() {
+		s.voxels[v].selectFaceColor(color)
+	}
+}
+
+func (sel *selection) color(s *Scene, color RGB) {
+	for _, v := range sel.voxels() {
+		s.voxels[v].colorSelectedFace(color)
 	}
 }
 
@@ -40,7 +52,7 @@ func (sel *selection) addVox(v int) {
 	sel.len++
 }
 
-func (sel *selection) newSelection(s *Scene, start, end mgl32.Vec2) {
+func (sel *selection) newSelection(s *Scene, start, end mgl32.Vec2, color RGB) {
 	v1, f1, s1 := intersectVoxel(s, start)
 	if !s1 {
 		sel.deselectAll(s)
@@ -114,17 +126,21 @@ func (sel *selection) newSelection(s *Scene, start, end mgl32.Vec2) {
 		}
 	}
 
-	sel.selectAll(s)
+	sel.selectAll(s, color)
 	s.update = true
 }
 
-func (sel *selection) hilightSelection(s *Scene) {
+func (sel *selection) hilightSelection(s *Scene, color RGB) {
 	for i, v := range sel.allVox {
 		if i >= sel.len {
 			break
 		}
-		s.voxels[v].selectFace(sel.face)
+		s.voxels[v].selectFace(sel.face, color)
 	}
+}
+
+func (sel *selection) isEmpty() bool {
+	return len(sel.allVox) == 0
 }
 
 func newSelection() selection {

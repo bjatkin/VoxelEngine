@@ -44,6 +44,10 @@ func main() {
 	scene.moveCamera(0, 0, 85)
 	scene.rotateCamera(-1, 0, 0)
 
+	//Set up the save/load button
+	initSaveBtn(scene)
+	initLoadBtn(scene)
+
 	//Set up the selection tracker
 	curSelection = newSelection()
 
@@ -67,6 +71,7 @@ var (
 	selectEndCorner   mgl32.Vec2
 	addMode           bool
 	subMode           bool
+	selectColor       RGB
 )
 
 func update(deltaT float32, scenes []*Scene) {
@@ -115,7 +120,7 @@ func update(deltaT float32, scenes []*Scene) {
 		selectMode = true
 		//Hilight the new selection
 		selectEndCorner = mgl32.Vec2{mouseInput.x, mouseInput.y}
-		curSelection.newSelection(S, selectStartCorner, selectEndCorner)
+		curSelection.newSelection(S, selectStartCorner, selectEndCorner, RGB{171, 129, 126})
 	}
 
 	if !mouseInput.leftClick && selectMode {
@@ -130,7 +135,7 @@ func update(deltaT float32, scenes []*Scene) {
 			for i, j := range curSelection.voxels() {
 				v := S.voxels[j]
 				v.deselectFace(f)
-				vox := v.newVoxelNeighbor(curSelection.face)
+				vox := v.newVoxelNeighbor(curSelection.face, selectColor)
 				index := S.addVoxel(vox)
 				curSelection.allVox[i] = index[0]
 			}
@@ -138,7 +143,6 @@ func update(deltaT float32, scenes []*Scene) {
 	}
 
 	if mouseInput.leftClick && subMode {
-		//TODO implement this
 		i, f, succ := intersectVoxel(S, mgl32.Vec2{mouseInput.x, mouseInput.y})
 		remove := []int{}
 		newSel := []int{}
@@ -162,27 +166,54 @@ func update(deltaT float32, scenes []*Scene) {
 			for _, i := range newSel {
 				curSelection.addVox(i)
 			}
-			curSelection.selectAll(S)
+			curSelection.selectAll(S, RGB{0, 0, 200})
 			S.removeVoxel(remove...)
 			S.update = true
 		}
+
+		//check if we have no more selection
+		if curSelection.isEmpty() {
+			keyInput.keys[esc] = true
+		}
 	}
 
-	if keyInput.keys[aKey] {
+	if keyInput.keys[aKey] && !curSelection.isEmpty() {
 		keyInput.keys[aKey] = false
 		addMode = !addMode
 		subMode = false
+		selectColor = RGB{200, 0, 0}
+		curSelection.colorSelection(S, selectColor)
+		S.update = true
 	}
 
-	if keyInput.keys[sKey] {
+	if keyInput.keys[sKey] && !curSelection.isEmpty() {
 		keyInput.keys[sKey] = false
 		subMode = !subMode
 		addMode = false
+		selectColor = RGB{0, 0, 200}
+		curSelection.colorSelection(S, selectColor)
+		S.update = true
+	}
+
+	if keyInput.keys[esc] {
+		addMode = false
+		subMode = false
+		curSelection.deselectAll(S)
+		selectColor = RGB{171, 129, 126}
+		curSelection.colorSelection(S, selectColor)
+		S.update = true
+	}
+
+	//check if we need up update the colors of the current selection
+	if new, color := ColorPicker.newColor(); new {
+		curSelection.color(S, color)
 	}
 }
 
 func start(context WebGl) {
+	selectColor = RGB{171, 129, 126}
 	globalConetxt = context
+	ColorPicker.init()
 
 	//Needs to be added in if you're not compiling with tinygo
 	//This will export the renderFrame function
