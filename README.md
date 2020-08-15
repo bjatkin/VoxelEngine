@@ -28,9 +28,7 @@ You can save and load the voxel project you are working on so you don't loose yo
 the files are stored in .vng format. You can see several example vng files in the example 
 folder of this repo.
 
-![Open File](https://github.com/bjatkin/VoxelEngine/tree/master/image/OpenFile.png)
-![GoLF Logo](https://github.com/bjatkin/golf-engine/blob/master/images/logo_large.png)
-
+![Open File](https://github.com/bjatkin/VoxelEngine/blob/master/images/OpenFile.png)
 
 # Controlls
  * Righ Click & drag - Zoom In
@@ -45,18 +43,18 @@ folder of this repo.
  * ESC - deselect all voxel faces
 
 ### Add Mode
-![Add Mode](https://github.com/bjatkin/VoxelEngine/tree/master/image/AddMode.png)
+![Add Mode](https://github.com/bjatkin/VoxelEngine/tree/master/images/AddMode.png)
 
 ### Sub Mode
-![Sub Mode](https://github.com/bjatkin/VoxelEngine/tree/master/image/SutractMode.png)
+![Sub Mode](https://github.com/bjatkin/VoxelEngine/tree/master/images/SutractMode.png)
 
 # Examples
 The following are example models created using this project
 
-![Green Pipe](https://github.com/bjatkin/VoxelEngine/tree/master/image/GreenPipe.png)
-![Gold Coin](https://github.com/bjatkin/VoxelEngine/tree/master/image/Coin.png)
-![Mushroom](https://github.com/bjatkin/VoxelEngine/tree/master/image/Mushroom.png)
-![Zelda Sword](https://github.com/bjatkin/VoxelEngine/tree/master/image/ZeldaSword.png)
+![Green Pipe](https://github.com/bjatkin/VoxelEngine/tree/master/images/GreenPipe.png)
+![Gold Coin](https://github.com/bjatkin/VoxelEngine/tree/master/images/Coin.png)
+![Mushroom](https://github.com/bjatkin/VoxelEngine/tree/master/images/Mushroom.png)
+![Zelda Sword](https://github.com/bjatkin/VoxelEngine/tree/master/images/ZeldaSword.png)
 
 # Future Project Goals
  * create a standalone version using electron
