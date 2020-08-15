@@ -205,7 +205,7 @@ func update(deltaT float32, scenes []*scene) {
 	}
 
 	//check if we need up update the colors of the current selection
-	if new, color := ColorPicker.newColor(); new {
+	if new, color := picker.newColor(); new {
 		curSelection.color(S, color)
 	}
 }
@@ -213,7 +213,7 @@ func update(deltaT float32, scenes []*scene) {
 func start(context webGl) {
 	selectColor = rgb{171, 129, 126}
 	globalConetxt = context
-	ColorPicker.init()
+	picker.init()
 
 	//Needs to be added in if you're not compiling with tinygo
 	//This will export the renderFrame function

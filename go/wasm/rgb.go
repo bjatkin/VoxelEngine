@@ -9,7 +9,7 @@ type rgb struct {
 }
 
 func newRGB(r, g, b float32) rgb {
-	return RGB{
+	return rgb{
 		R: r,
 		G: g,
 		B: b,
@@ -17,7 +17,7 @@ func newRGB(r, g, b float32) rgb {
 }
 
 func newRGBSet(r, g, b float32) [6]rgb {
-	return [6]RGB{
+	return [6]rgb{
 		newRGB(r, g, b),
 		newRGB(r, g, b),
 		newRGB(r, g, b),

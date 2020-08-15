@@ -29,7 +29,7 @@ func (k *keyboard) init(doc, canvas js.Value) {
 
 	keyDown := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		evt := args[0]
-		if evt.Get("target") != canvas {
+		if evt.Get("target").Equal(canvas) {
 			return nil
 		}
 		k.keys[evt.Get("keyCode").Int()] = true

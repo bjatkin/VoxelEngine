@@ -25,7 +25,7 @@ func save(s *scene) (string, error) {
 }
 
 func load(s *scene, dataStr string) error {
-	s.voxels = []*Voxel{}
+	s.voxels = []*voxel{}
 	data64, err := base64.StdEncoding.DecodeString(dataStr)
 	if err != nil {
 		return err

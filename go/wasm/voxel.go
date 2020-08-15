@@ -126,7 +126,7 @@ func newVoxel(x, y, z float32, col [6]rgb) *voxel {
 		mgl32.Vec3{x + 0.5, y, z - 0.5},
 	}
 
-	ret := Voxel{
+	ret := voxel{
 		x:       x,
 		y:       y,
 		z:       z,

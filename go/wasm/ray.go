@@ -19,7 +19,7 @@ func newRay(s *scene, x, y float32) ray {
 
 	inv := s.rawProjMat.Mul4(s.rawViewMat).Inv()
 	dir = s.rawModelRotMat.Inv().Mul4x1(inv.Mul4x1(dir))
-	return Ray{
+	return ray{
 		orig: orig.Vec3(),
 		dir:  dir.Vec3(),
 	}

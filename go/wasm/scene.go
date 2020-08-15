@@ -7,6 +7,12 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+//TODO fix this code so it does not need to use js.TypedArrays as these were removed
+//https://github.com/golang/go/issues/31980
+//Instead create a new Float32Array
+//Then use the js.CopyBytesToJS to copy the data into the array
+//Then use the float32 array in the bufferData call
+
 type scene struct {
 	voxels        []*voxel
 	gl            js.Value //Rendering context
@@ -18,13 +24,16 @@ type scene struct {
 	dataBuff    js.Value //data buffer
 	dataBuffSet bool
 
-	projMat        js.TypedArray //Uniforms
-	uProjMat       js.Value
-	rawProjMat     mgl32.Mat4
-	viewMat        js.TypedArray
-	uViewMat       js.Value
-	rawViewMat     mgl32.Mat4
-	modelMat       js.TypedArray
+	// projMat        js.TypedArray //Uniforms
+	projMat    []float32
+	uProjMat   js.Value
+	rawProjMat mgl32.Mat4
+	// viewMat        js.TypedArray
+	viewMat    []float32
+	uViewMat   js.Value
+	rawViewMat mgl32.Mat4
+	// modelMat       js.TypedArray
+	modelMat       []float32
 	uModelMat      js.Value
 	rawModelMat    mgl32.Mat4
 	rawModelRotMat mgl32.Mat4
@@ -139,7 +148,7 @@ func (s *scene) buildBufferData() {
 	}
 
 	// Create a data buffer
-	tArray := js.TypedArrayOf(s.bufferData)
+	tArray := s.bufferData //js.TypedArrayOf(s.bufferData)
 	dataBuff := s.dataBuff
 	if !s.dataBuffSet {
 		dataBuff = s.gl.Call("createBuffer")
@@ -221,7 +230,7 @@ func (s *scene) setProjMat(deg float32) {
 
 	var projMatrixBuffer *[16]float32
 	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
-	s.projMat = js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
+	s.projMat = (*projMatrixBuffer)[:] //js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
 	s.rawProjMat = projMatrix
 }
 
@@ -231,7 +240,7 @@ func (s *scene) setViewMat(eye, center, up mgl32.Vec3) {
 
 	var viewMatrixBuffer *[16]float32
 	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
-	s.viewMat = js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
+	s.viewMat = (*viewMatrixBuffer)[:] //js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
 	s.rawViewMat = viewMatrix
 }
 
@@ -247,7 +256,7 @@ func (s *scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 
 	var modelMatrixBuffer *[16]float32
 	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
-	s.modelMat = js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
+	s.modelMat = (*modelMatrixBuffer)[:] //js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 	s.rawModelMat = movMatrix
 }
 

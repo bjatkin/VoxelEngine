@@ -28,11 +28,11 @@ func getContext(canvas js.Value) (js.Value, int, int) {
 	canvas.Set("tabIndex", 0) // Not sure if this is needed
 
 	gl := canvas.Call("getContext", "webgl")
-	if gl == js.Undefined() {
+	if gl.Equal(js.Undefined()) {
 		gl = canvas.Call("getContext", "experimental-webgl")
 	}
 	// once again
-	if gl == js.Undefined() {
+	if gl.Equal(js.Undefined()) {
 		js.Global().Call("alert", "browser might not support webgl")
 		return gl, 0, 0
 	}

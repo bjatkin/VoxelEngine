@@ -23,7 +23,7 @@ const (
 func (m *mouse) init(doc, canvas js.Value) {
 	mouseDownEvt := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		evt := args[0]
-		if evt.Get("target") != canvas {
+		if !evt.Get("target").Equal(canvas) {
 			return nil
 		}
 		button := evt.Get("button").Float()
@@ -55,7 +55,7 @@ func (m *mouse) init(doc, canvas js.Value) {
 
 	mouseMoveEvt := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		evt := args[0]
-		if evt.Get("target") != canvas {
+		if evt.Get("target").Equal(canvas) {
 			m.leftClick = false
 			m.rightClick = false
 			m.middleClick = false
