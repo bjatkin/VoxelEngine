@@ -17,7 +17,10 @@ the go/server directory.
 # Building The Project
 
 You can build the project by running the build.sh file in the go/wasm directory. This will 
-compile the go code into a wasm file and place it in the dist folder.
+compile the go code into a wasm file and place it in the dist folder. You may also need to
+update the wasm_exec.js file. This file must match the version of go used to compile the
+wasm file. This file can be located in the go/misc/wasm/wasm_exec.js and can simply be
+coppied from that directory into the dist directory.
 
 # Saving & Loading Files
 
@@ -26,6 +29,8 @@ the files are stored in .vng format. You can see several example vng files in th
 folder of this repo.
 
 ![Open File](https://github.com/bjatkin/VoxelEngine/tree/master/image/OpenFile.png)
+![GoLF Logo](https://github.com/bjatkin/golf-engine/blob/master/images/logo_large.png)
+
 
 # Controlls
  * Righ Click & drag - Zoom In
