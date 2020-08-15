@@ -62,4 +62,12 @@ The following are example models created using this project
 ![Zelda Sword](https://github.com/bjatkin/VoxelEngine/blob/master/images/ZeldaSword.png)
 
 # Future Project Goals
- * create a standalone version using electron
+ * Create a standalone version using electron
+ * Fix the strange camera rotation. (I may need to move the origin before rotating?)
+ * Fix occasional nil pointer crashes when removing voxels
+ * Optimize the voxel mesh so that I can handle more geometry 
+    (this will probably need to happen asyncronously)
+ * Improve the UI (Maybe it should all just exsist in the canvas?)
+ * Save and load the color pallet
+ * Could I save GPU and transfer speed by using indexed color?
+ * Clean up the code. Code could always be cleaner.
