@@ -17,26 +17,26 @@ func (sel *selection) voxels() []int {
 	return sel.allVox[:sel.len]
 }
 
-func (sel *selection) deselectAll(s *Scene) {
+func (sel *selection) deselectAll(s *scene) {
 	for _, v := range sel.voxels() {
 		s.voxels[v].deselectFace(sel.face)
 	}
 	sel.len = 0
 }
 
-func (sel *selection) selectAll(s *Scene, color RGB) {
+func (sel *selection) selectAll(s *scene, color rgb) {
 	for _, v := range sel.voxels() {
 		s.voxels[v].selectFace(sel.face, color)
 	}
 }
 
-func (sel *selection) colorSelection(s *Scene, color RGB) {
+func (sel *selection) colorSelection(s *scene, color rgb) {
 	for _, v := range sel.voxels() {
 		s.voxels[v].selectFaceColor(color)
 	}
 }
 
-func (sel *selection) color(s *Scene, color RGB) {
+func (sel *selection) color(s *scene, color rgb) {
 	for _, v := range sel.voxels() {
 		s.voxels[v].colorSelectedFace(color)
 	}
@@ -52,7 +52,7 @@ func (sel *selection) addVox(v int) {
 	sel.len++
 }
 
-func (sel *selection) newSelection(s *Scene, start, end mgl32.Vec2, color RGB) {
+func (sel *selection) newSelection(s *scene, start, end mgl32.Vec2, color rgb) {
 	v1, f1, s1 := intersectVoxel(s, start)
 	if !s1 {
 		sel.deselectAll(s)
@@ -130,7 +130,7 @@ func (sel *selection) newSelection(s *Scene, start, end mgl32.Vec2, color RGB) {
 	s.update = true
 }
 
-func (sel *selection) hilightSelection(s *Scene, color RGB) {
+func (sel *selection) hilightSelection(s *scene, color rgb) {
 	for i, v := range sel.allVox {
 		if i >= sel.len {
 			break
@@ -155,7 +155,7 @@ func voxDist(x1, y1, z1, x2, y2, z2 float32) float64 {
 		math.Abs(float64(z1-z2))
 }
 
-func intersectVoxel(s *Scene, point mgl32.Vec2) (int, int, bool) {
+func intersectVoxel(s *scene, point mgl32.Vec2) (int, int, bool) {
 	closest := float32(99999999.0)
 	r := newRay(s, point[0], point[1])
 	sel := -1

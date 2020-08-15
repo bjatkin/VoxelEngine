@@ -7,8 +7,8 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type Scene struct {
-	voxels        []*Voxel
+type scene struct {
+	voxels        []*voxel
 	gl            js.Value //Rendering context
 	program       js.Value //shader program
 	width, height int      //width and height of the canvas
@@ -83,8 +83,8 @@ void main(void) {
 }
 `
 
-func newScene(canvas js.Value, color RGB) *Scene {
-	ret := Scene{}
+func newScene(canvas js.Value, color rgb) *scene {
+	ret := scene{}
 	ret.gl, ret.width, ret.height = getContext(canvas)
 
 	vert := complieShader(ret.gl, glTypes.VertexShader, vShaderCode)
@@ -119,7 +119,7 @@ func newScene(canvas js.Value, color RGB) *Scene {
 	return &ret
 }
 
-func (s *Scene) buildBufferData() {
+func (s *scene) buildBufferData() {
 	if !s.update {
 		return
 	}
@@ -162,7 +162,7 @@ func (s *Scene) buildBufferData() {
 	s.gl.Call("vertexAttribPointer", s.aNormal, colSize, glTypes.Float, false, vertexByteSize, posSize*float32Bytes+colSize*float32Bytes)
 }
 
-func (s *Scene) removeVoxel(index ...int) {
+func (s *scene) removeVoxel(index ...int) {
 	l := len(index)
 	for d, i := range index {
 		s.voxels[i] = s.voxels[len(s.voxels)-(1+d)]
@@ -171,7 +171,7 @@ func (s *Scene) removeVoxel(index ...int) {
 	s.update = true
 }
 
-func (s *Scene) addVoxel(voxels ...*Voxel) []int {
+func (s *scene) addVoxel(voxels ...*voxel) []int {
 	ret := []int{}
 	for _, v := range voxels {
 		s.voxels = append(s.voxels, v)
@@ -181,7 +181,7 @@ func (s *Scene) addVoxel(voxels ...*Voxel) []int {
 	return ret
 }
 
-func (s *Scene) moveCamera(x, y, z float32) {
+func (s *scene) moveCamera(x, y, z float32) {
 	s.cameraLoc[0] += x
 	s.cameraLoc[1] += y
 	s.cameraLoc[2] += z
@@ -189,7 +189,7 @@ func (s *Scene) moveCamera(x, y, z float32) {
 		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
 }
 
-func (s *Scene) setCameraLoc(x, y, z float32) {
+func (s *scene) setCameraLoc(x, y, z float32) {
 	s.cameraLoc[0] = x
 	s.cameraLoc[1] = y
 	s.cameraLoc[2] = z
@@ -197,7 +197,7 @@ func (s *Scene) setCameraLoc(x, y, z float32) {
 		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
 }
 
-func (s *Scene) rotateCamera(x, y, z float32) {
+func (s *scene) rotateCamera(x, y, z float32) {
 	s.cameraRot[0] += x
 	s.cameraRot[1] += y
 	s.cameraRot[2] += z
@@ -205,7 +205,7 @@ func (s *Scene) rotateCamera(x, y, z float32) {
 		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
 }
 
-func (s *Scene) setCameraRot(x, y, z float32) {
+func (s *scene) setCameraRot(x, y, z float32) {
 	s.cameraRot[0] = x
 	s.cameraRot[1] = y
 	s.cameraRot[2] = z
@@ -213,7 +213,7 @@ func (s *Scene) setCameraRot(x, y, z float32) {
 		-s.cameraRot[0], s.cameraRot[1], s.cameraRot[2])
 }
 
-func (s *Scene) setProjMat(deg float32) {
+func (s *scene) setProjMat(deg float32) {
 	// Generate a projection matrix
 	ratio := float32(s.width) / float32(s.height)
 
@@ -225,7 +225,7 @@ func (s *Scene) setProjMat(deg float32) {
 	s.rawProjMat = projMatrix
 }
 
-func (s *Scene) setViewMat(eye, center, up mgl32.Vec3) {
+func (s *scene) setViewMat(eye, center, up mgl32.Vec3) {
 	// Generate a view matrix
 	viewMatrix := mgl32.LookAtV(eye, center, up)
 
@@ -235,7 +235,7 @@ func (s *Scene) setViewMat(eye, center, up mgl32.Vec3) {
 	s.rawViewMat = viewMatrix
 }
 
-func (s *Scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
+func (s *scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 	// Generate a model matrix
 	movMatrix := mgl32.HomogRotate3DX(rotX)
 	movMatrix = movMatrix.Mul4(mgl32.HomogRotate3DY(rotY))
@@ -251,7 +251,7 @@ func (s *Scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 	s.rawModelMat = movMatrix
 }
 
-func (s *Scene) render() {
+func (s *scene) render() {
 	//build all the data and attach the interleved buffered data
 	s.buildBufferData()
 

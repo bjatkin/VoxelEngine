@@ -42,18 +42,18 @@ func getContext(canvas js.Value) (js.Value, int, int) {
 	return gl, width, height
 }
 
-type WebGl struct {
-	scenes []*Scene
+type webGl struct {
+	scenes []*scene
 }
 
-var globalConetxt WebGl
+var globalConetxt webGl
 
-func newWebGL(scenes ...*Scene) WebGl {
-	return WebGl{
+func newWebGL(scenes ...*scene) webGl {
+	return webGl{
 		scenes: scenes,
 	}
 }
 
-func (w *WebGl) addScene(scene *Scene) {
+func (w *webGl) addScene(scene *scene) {
 	w.scenes = append(w.scenes, scene)
 }

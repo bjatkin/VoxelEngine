@@ -9,7 +9,7 @@ import (
 	"syscall/js"
 )
 
-func save(s *Scene) (string, error) {
+func save(s *scene) (string, error) {
 	//deselect all before saving
 	curSelection.deselectAll(s)
 	var data bytes.Buffer
@@ -24,7 +24,7 @@ func save(s *Scene) (string, error) {
 	return base64.StdEncoding.EncodeToString(data.Bytes()), nil
 }
 
-func load(s *Scene, dataStr string) error {
+func load(s *scene, dataStr string) error {
 	s.voxels = []*Voxel{}
 	data64, err := base64.StdEncoding.DecodeString(dataStr)
 	if err != nil {
@@ -54,7 +54,7 @@ func load(s *Scene, dataStr string) error {
 	return nil
 }
 
-func initSaveBtn(s *Scene) {
+func initSaveBtn(s *scene) {
 	js.Global().Set("saveCurrentScene", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		data, err := save(s)
 		if err != nil {
@@ -64,7 +64,7 @@ func initSaveBtn(s *Scene) {
 	}))
 }
 
-func initLoadBtn(s *Scene) {
+func initLoadBtn(s *scene) {
 	fmt.Printf("Loading Data\n")
 	js.Global().Set("loadNewScene", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		data := args[0].String()

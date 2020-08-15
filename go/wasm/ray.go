@@ -4,12 +4,12 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type Ray struct {
+type ray struct {
 	orig mgl32.Vec3
 	dir  mgl32.Vec3
 }
 
-func newRay(s *Scene, x, y float32) Ray {
+func newRay(s *scene, x, y float32) ray {
 	// orig := s.cameraLoc
 	orig := s.rawModelMat.Inv().Mul4x1(mgl32.Vec4{0, 0, 0, 1})
 	newX := 2*x/float32(s.width) - 1

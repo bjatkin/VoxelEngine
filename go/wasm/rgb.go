@@ -4,11 +4,11 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type RGB struct {
+type rgb struct {
 	R, G, B float32
 }
 
-func newRGB(r, g, b float32) RGB {
+func newRGB(r, g, b float32) rgb {
 	return RGB{
 		R: r,
 		G: g,
@@ -16,7 +16,7 @@ func newRGB(r, g, b float32) RGB {
 	}
 }
 
-func newRGBSet(r, g, b float32) [6]RGB {
+func newRGBSet(r, g, b float32) [6]rgb {
 	return [6]RGB{
 		newRGB(r, g, b),
 		newRGB(r, g, b),
@@ -27,7 +27,7 @@ func newRGBSet(r, g, b float32) [6]RGB {
 	}
 }
 
-func (rgb *RGB) vec3() mgl32.Vec3 {
+func (rgb *rgb) vec3() mgl32.Vec3 {
 	return mgl32.Vec3{
 		rgb.R / 255.0,
 		rgb.G / 255.0,

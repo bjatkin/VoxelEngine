@@ -32,7 +32,7 @@ func main() {
 
 	//Create the base scene
 	baseColor := newRGBSet(235, 254, 255)
-	vox := []*Voxel{}
+	vox := []*voxel{}
 	voxCount := 2
 	for x := 0; x < voxCount; x++ {
 		for y := 0; y < voxCount; y++ {
@@ -71,10 +71,10 @@ var (
 	selectEndCorner   mgl32.Vec2
 	addMode           bool
 	subMode           bool
-	selectColor       RGB
+	selectColor       rgb
 )
 
-func update(deltaT float32, scenes []*Scene) {
+func update(deltaT float32, scenes []*scene) {
 	S := scenes[0]
 
 	mdx, mdy := (mouseInput.dx/deltaT)/float32(S.width), (mouseInput.dy/deltaT)/float32(S.height)
@@ -120,7 +120,7 @@ func update(deltaT float32, scenes []*Scene) {
 		selectMode = true
 		//Hilight the new selection
 		selectEndCorner = mgl32.Vec2{mouseInput.x, mouseInput.y}
-		curSelection.newSelection(S, selectStartCorner, selectEndCorner, RGB{171, 129, 126})
+		curSelection.newSelection(S, selectStartCorner, selectEndCorner, rgb{171, 129, 126})
 	}
 
 	if !mouseInput.leftClick && selectMode {
@@ -166,7 +166,7 @@ func update(deltaT float32, scenes []*Scene) {
 			for _, i := range newSel {
 				curSelection.addVox(i)
 			}
-			curSelection.selectAll(S, RGB{0, 0, 200})
+			curSelection.selectAll(S, rgb{0, 0, 200})
 			S.removeVoxel(remove...)
 			S.update = true
 		}
@@ -181,7 +181,7 @@ func update(deltaT float32, scenes []*Scene) {
 		keyInput.keys[aKey] = false
 		addMode = !addMode
 		subMode = false
-		selectColor = RGB{200, 0, 0}
+		selectColor = rgb{200, 0, 0}
 		curSelection.colorSelection(S, selectColor)
 		S.update = true
 	}
@@ -190,7 +190,7 @@ func update(deltaT float32, scenes []*Scene) {
 		keyInput.keys[sKey] = false
 		subMode = !subMode
 		addMode = false
-		selectColor = RGB{0, 0, 200}
+		selectColor = rgb{0, 0, 200}
 		curSelection.colorSelection(S, selectColor)
 		S.update = true
 	}
@@ -199,7 +199,7 @@ func update(deltaT float32, scenes []*Scene) {
 		addMode = false
 		subMode = false
 		curSelection.deselectAll(S)
-		selectColor = RGB{171, 129, 126}
+		selectColor = rgb{171, 129, 126}
 		curSelection.colorSelection(S, selectColor)
 		S.update = true
 	}
@@ -210,8 +210,8 @@ func update(deltaT float32, scenes []*Scene) {
 	}
 }
 
-func start(context WebGl) {
-	selectColor = RGB{171, 129, 126}
+func start(context webGl) {
+	selectColor = rgb{171, 129, 126}
 	globalConetxt = context
 	ColorPicker.init()
 
