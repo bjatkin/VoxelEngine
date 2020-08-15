@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"syscall/js"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -92,6 +93,7 @@ func update(deltaT float32, scenes []*scene) {
 	}
 
 	if mouseInput.rightClick {
+		fmt.Printf("Zooming!\n")
 		//Zoom
 		if !zooming {
 			originalZoom = S.cameraLoc[2]

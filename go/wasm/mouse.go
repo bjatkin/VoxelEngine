@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"syscall/js"
 )
 
@@ -26,7 +27,8 @@ func (m *mouse) init(doc, canvas js.Value) {
 		if !evt.Get("target").Equal(canvas) {
 			return nil
 		}
-		button := evt.Get("button").Float()
+		button := evt.Get("button").Int()
+		fmt.Printf("CLICK %d\n", button)
 		if button == leftMouseButton {
 			m.leftClick = true
 		}
@@ -55,7 +57,7 @@ func (m *mouse) init(doc, canvas js.Value) {
 
 	mouseMoveEvt := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		evt := args[0]
-		if evt.Get("target").Equal(canvas) {
+		if !evt.Get("target").Equal(canvas) {
 			m.leftClick = false
 			m.rightClick = false
 			m.middleClick = false

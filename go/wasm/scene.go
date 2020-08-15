@@ -2,7 +2,6 @@ package main
 
 import (
 	"syscall/js"
-	"unsafe"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -25,15 +24,15 @@ type scene struct {
 	dataBuffSet bool
 
 	// projMat        js.TypedArray //Uniforms
-	projMat    []float32
+	projMat    js.Value
 	uProjMat   js.Value
 	rawProjMat mgl32.Mat4
 	// viewMat        js.TypedArray
-	viewMat    []float32
+	viewMat    js.Value
 	uViewMat   js.Value
 	rawViewMat mgl32.Mat4
 	// modelMat       js.TypedArray
-	modelMat       []float32
+	modelMat       js.Value
 	uModelMat      js.Value
 	rawModelMat    mgl32.Mat4
 	rawModelRotMat mgl32.Mat4
@@ -99,6 +98,10 @@ func newScene(canvas js.Value, color rgb) *scene {
 	vert := complieShader(ret.gl, glTypes.VertexShader, vShaderCode)
 	frag := complieShader(ret.gl, glTypes.FragmentShader, fShaderCode)
 
+	// ret.projMat = js.Global().Get("Float32Array").New(16)
+	// ret.viewMat = js.Global().Get("Float32Array").New(16)
+	// ret.modelMat = js.Global().Get("Float32Array").New(16)
+
 	ret.program = linkProgram(ret.gl, vert, frag)
 	ret.uProjMat = ret.gl.Call("getUniformLocation", ret.program, "u_Pmatrix")
 	ret.uViewMat = ret.gl.Call("getUniformLocation", ret.program, "u_Vmatrix")
@@ -148,7 +151,7 @@ func (s *scene) buildBufferData() {
 	}
 
 	// Create a data buffer
-	tArray := s.bufferData //js.TypedArrayOf(s.bufferData)
+	tArray := js.Global().Get("Float32Array").New(toIArray(s.bufferData)) //js.TypedArrayOf(s.bufferData)
 	dataBuff := s.dataBuff
 	if !s.dataBuffSet {
 		dataBuff = s.gl.Call("createBuffer")
@@ -228,9 +231,16 @@ func (s *scene) setProjMat(deg float32) {
 
 	projMatrix := mgl32.Perspective(mgl32.DegToRad(deg), ratio, 1, 1000.0)
 
-	var projMatrixBuffer *[16]float32
-	projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
-	s.projMat = (*projMatrixBuffer)[:] //js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
+	// var projMatrixBuffer *[16]float32
+	// projMatrixBuffer = (*[16]float32)(unsafe.Pointer(&projMatrix))
+	// s.projMat = js.TypedArrayOf([]float32((*projMatrixBuffer)[:]))
+
+	mat := [16]float32(projMatrix)
+	s.projMat = js.Global().Get("Float32Array").New(toIArray(mat[:]))
+
+	// ret.projMat = js.Global().Get("Float32Array").New(16)
+	// ret.viewMat = js.Global().Get("Float32Array").New(16)
+	// ret.modelMat = js.Global().Get("Float32Array").New(16)
 	s.rawProjMat = projMatrix
 }
 
@@ -238,9 +248,11 @@ func (s *scene) setViewMat(eye, center, up mgl32.Vec3) {
 	// Generate a view matrix
 	viewMatrix := mgl32.LookAtV(eye, center, up)
 
-	var viewMatrixBuffer *[16]float32
-	viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
-	s.viewMat = (*viewMatrixBuffer)[:] //js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
+	mat := [16]float32(viewMatrix)
+	s.viewMat = js.Global().Get("Float32Array").New(toIArray(mat[:]))
+	// var viewMatrixBuffer *[16]float32
+	// viewMatrixBuffer = (*[16]float32)(unsafe.Pointer(&viewMatrix))
+	// s.viewMat = js.TypedArrayOf([]float32((*viewMatrixBuffer)[:]))
 	s.rawViewMat = viewMatrix
 }
 
@@ -254,9 +266,12 @@ func (s *scene) setModelMat(tranX, tranY, tranZ, rotX, rotY, rotZ float32) {
 	movMatrix[13] = tranY
 	movMatrix[14] = tranZ
 
-	var modelMatrixBuffer *[16]float32
-	modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
-	s.modelMat = (*modelMatrixBuffer)[:] //js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
+	mat := [16]float32(movMatrix)
+	s.modelMat = js.Global().Get("Float32Array").New(toIArray(mat[:]))
+	// var modelMatrixBuffer *[16]float32
+	// modelMatrixBuffer = (*[16]float32)(unsafe.Pointer(&movMatrix))
+	//js.CopyBytesToJS(s.modelMat, toBytes(movMatrix))
+	//s.modelMat = js.TypedArrayOf([]float32((*modelMatrixBuffer)[:]))
 	s.rawModelMat = movMatrix
 }
 
@@ -275,4 +290,12 @@ func (s *scene) render() {
 
 	// Make the draw call
 	s.gl.Call("drawArrays", glTypes.Triangles, 0, s.buffLen)
+}
+
+func toIArray(data []float32) []interface{} {
+	var ret []interface{}
+	for _, f := range data {
+		ret = append(ret, interface{}(f))
+	}
+	return ret
 }

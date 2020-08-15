@@ -1,6 +1,6 @@
 'use strict';
 
-const WASM_URL = 'wasm.wasm';
+const WASM_URL = 'main.wasm';
 var wasm;
 
 // Prevent the context menue on the canvas
