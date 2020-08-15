@@ -5,6 +5,11 @@ In order to make the project cross platform it's
 compiled to web assembly and then serverd with a
 simple web server.
 
+Note: This project makes heavy use of the syscall/js go library to interact with webGL.
+This library is still under development and may introduce breaking changes which
+could break this project. In order to run this project you may have to use an older
+version of golan and syscall/js. This project last was tested on go version 1.14.2 on macOS
+
 # Running The Project
 
 First, you'll need to [install golang](https://golang.org/) if you have not already.
