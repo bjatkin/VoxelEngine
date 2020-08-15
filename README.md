@@ -21,10 +21,11 @@ compile the go code into a wasm file and place it in the dist folder.
 
 # Saving & Loading Files
 
-![Open File](https://github.com/bjatkin/VoxelEngine/tree/master/image/OpenFile.png)
 You can save and load the voxel project you are working on so you don't loose your project.
 the files are stored in .vng format. You can see several example vng files in the example 
 folder of this repo.
+
+![Open File](https://github.com/bjatkin/VoxelEngine/tree/master/image/OpenFile.png)
 
 # Controlls
     * Righ Click & drag - Zoom In
@@ -45,11 +46,12 @@ folder of this repo.
 ![Sub Mode](https://github.com/bjatkin/VoxelEngine/tree/master/image/SutractMode.png)
 
 # Examples
-The following are example projects created using this voxel project
-[Green Pipe](https://github.com/bjatkin/VoxelEngine/tree/master/image/GreenPipe.png)
-[Gold Coin](https://github.com/bjatkin/VoxelEngine/tree/master/image/Coin.png)
-[Mushroom](https://github.com/bjatkin/VoxelEngine/tree/master/image/Mushroom.png)
-[Zelda Sword](https://github.com/bjatkin/VoxelEngine/tree/master/image/ZeldaSword.png)
+The following are example models created using this project
+
+![Green Pipe](https://github.com/bjatkin/VoxelEngine/tree/master/image/GreenPipe.png)
+![Gold Coin](https://github.com/bjatkin/VoxelEngine/tree/master/image/Coin.png)
+![Mushroom](https://github.com/bjatkin/VoxelEngine/tree/master/image/Mushroom.png)
+![Zelda Sword](https://github.com/bjatkin/VoxelEngine/tree/master/image/ZeldaSword.png)
 
 # Future Work
     * create a standalone version using electron
