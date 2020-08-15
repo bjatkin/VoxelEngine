@@ -43,18 +43,18 @@ folder of this repo.
  * ESC - deselect all voxel faces
 
 ### Add Mode
-![Add Mode](https://github.com/bjatkin/VoxelEngine/tree/master/images/AddMode.png)
+![Add Mode](https://github.com/bjatkin/VoxelEngine/blob/master/images/AddMode.png)
 
 ### Sub Mode
-![Sub Mode](https://github.com/bjatkin/VoxelEngine/tree/master/images/SutractMode.png)
+![Sub Mode](https://github.com/bjatkin/VoxelEngine/blob/master/images/SutractMode.png)
 
 # Examples
 The following are example models created using this project
 
-![Green Pipe](https://github.com/bjatkin/VoxelEngine/tree/master/images/GreenPipe.png)
-![Gold Coin](https://github.com/bjatkin/VoxelEngine/tree/master/images/Coin.png)
-![Mushroom](https://github.com/bjatkin/VoxelEngine/tree/master/images/Mushroom.png)
-![Zelda Sword](https://github.com/bjatkin/VoxelEngine/tree/master/images/ZeldaSword.png)
+![Green Pipe](https://github.com/bjatkin/VoxelEngine/blob/master/images/GreenPipe.png)
+![Gold Coin](https://github.com/bjatkin/VoxelEngine/blob/master/images/Coin.png)
+![Mushroom](https://github.com/bjatkin/VoxelEngine/blob/master/images/Mushroom.png)
+![Zelda Sword](https://github.com/bjatkin/VoxelEngine/blob/master/images/ZeldaSword.png)
 
 # Future Project Goals
  * create a standalone version using electron
