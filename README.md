@@ -28,16 +28,16 @@ folder of this repo.
 ![Open File](https://github.com/bjatkin/VoxelEngine/tree/master/image/OpenFile.png)
 
 # Controlls
-    * Righ Click & drag - Zoom In
-    * Left Click & drag - Select voxel faces
-    * Left Click & drag + Left Shift - Pan the view
-    * Middle Click & drag - Pan the view
-    * Left Click & drag + Left Alt - Rotate the view
-    * A Key - switch into add mode. Selected faces will turn red
-    * S Key - switch into subtract mode. Selected faces will turn blue
-    * Left Click on add mode faces - add voxels on top of the selected faces
-    * Left Click on subtract mode faces - remove selected voxels and the voxels beneth them
-    * ESC - deselect all voxel faces
+ * Righ Click & drag - Zoom In
+ * Left Click & drag - Select voxel faces
+ * Left Click & drag + Left Shift - Pan the view
+ * Middle Click & drag - Pan the view
+ * Left Click & drag + Left Alt - Rotate the view
+ * A Key - switch into add mode. Selected faces will turn red
+ * S Key - switch into subtract mode. Selected faces will turn blue
+ * Left Click on add mode faces - add voxels on top of the selected faces
+ * Left Click on subtract mode faces - remove selected voxels and the voxels beneth them
+ * ESC - deselect all voxel faces
 
 ### Add Mode
 ![Add Mode](https://github.com/bjatkin/VoxelEngine/tree/master/image/AddMode.png)
@@ -53,5 +53,5 @@ The following are example models created using this project
 ![Mushroom](https://github.com/bjatkin/VoxelEngine/tree/master/image/Mushroom.png)
 ![Zelda Sword](https://github.com/bjatkin/VoxelEngine/tree/master/image/ZeldaSword.png)
 
-# Future Work
-    * create a standalone version using electron
+# Future Project Goals
+ * create a standalone version using electron
