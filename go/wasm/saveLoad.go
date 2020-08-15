@@ -10,6 +10,8 @@ import (
 )
 
 func save(s *Scene) (string, error) {
+	//deselect all before saving
+	curSelection.deselectAll(s)
 	var data bytes.Buffer
 	for _, vox := range s.voxels {
 		enc := gob.NewEncoder(&data)

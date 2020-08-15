@@ -33,7 +33,7 @@ func main() {
 	//Create the base scene
 	baseColor := newRGBSet(235, 254, 255)
 	vox := []*Voxel{}
-	voxCount := 50
+	voxCount := 2
 	for x := 0; x < voxCount; x++ {
 		for y := 0; y < voxCount; y++ {
 			vox = append(vox, newVoxel(float32(x)-float32(voxCount)/2, 0, float32(y)-float32(voxCount)/2, baseColor))
@@ -81,7 +81,7 @@ func update(deltaT float32, scenes []*Scene) {
 
 	if (keyInput.keys[leftShift] && mouseInput.leftClick) || mouseInput.middleClick {
 		//Pan
-		panSpeed := float32(5000.0)
+		panSpeed := float32(500.0)
 		S.moveCamera(-mdx*panSpeed, mdy*panSpeed, 0)
 	}
 

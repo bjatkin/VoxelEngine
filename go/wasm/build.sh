@@ -1,3 +1,3 @@
 #!/bin/sh
 
-GOOS=js GOARCH=wasm go build -o ../server/dist/wasm.wasm
+GOOS=js GOARCH=wasm go build -o ../dist/wasm.wasm
