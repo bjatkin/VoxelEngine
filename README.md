@@ -71,3 +71,4 @@ The following are example models created using this project
  * Save and load the color pallet
  * Could I save GPU and transfer speed by using indexed color?
  * Clean up the code. Code could always be cleaner.
+ * Import/ export .vox files instead of custom .vng files
