@@ -51,7 +51,7 @@ folder of this repo.
 ![Add Mode](https://github.com/bjatkin/VoxelEngine/blob/master/images/AddMode.png)
 
 ### Sub Mode
-![Sub Mode](https://github.com/bjatkin/VoxelEngine/blob/master/images/SutractMode.png)
+![Sub Mode](https://github.com/bjatkin/VoxelEngine/blob/master/images/SubtractMode.png)
 
 # Examples
 The following are example models created using this project
